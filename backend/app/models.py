@@ -108,6 +108,116 @@ class ItemsPublic(SQLModel):
     count: int
 
 
+class ConnectorSyncResponse(SQLModel):
+    source: str
+    status: str
+    snapshot_version: str
+    synced_records: int
+    normalized_records: int
+    conflict_records: int
+
+
+class RawPositionBase(SQLModel):
+    source: str = Field(max_length=64, index=True)
+    external_id: str = Field(max_length=255, index=True)
+    symbol: str = Field(max_length=32)
+    asset_type: str = Field(max_length=64)
+    quantity: float
+    market_value: float
+    currency: str = Field(default="USD", max_length=8)
+
+
+class RawPosition(RawPositionBase, table=True):
+    id: uuid.UUID = Field(default_factory=uuid.uuid4, primary_key=True)
+    owner_id: uuid.UUID = Field(foreign_key="user.id", nullable=False, ondelete="CASCADE")
+    fetched_at: datetime = Field(default_factory=get_datetime_utc, sa_type=DateTime(timezone=True))  # type: ignore
+
+
+class NormalizedPositionBase(SQLModel):
+    symbol: str = Field(max_length=32)
+    asset_class: str = Field(max_length=64)
+    quantity: float
+    market_value_usd: float
+    normalization_status: str = Field(default="normalized", max_length=32)
+    transform_version: str = Field(default="v1", max_length=32)
+    snapshot_version: str = Field(max_length=64, index=True)
+
+
+class NormalizedPosition(NormalizedPositionBase, table=True):
+    id: uuid.UUID = Field(default_factory=uuid.uuid4, primary_key=True)
+    raw_position_id: uuid.UUID = Field(foreign_key="rawposition.id", nullable=False, ondelete="CASCADE")
+    owner_id: uuid.UUID = Field(foreign_key="user.id", nullable=False, ondelete="CASCADE")
+    created_at: datetime = Field(default_factory=get_datetime_utc, sa_type=DateTime(timezone=True))  # type: ignore
+
+
+class NormalizationConflictBase(SQLModel):
+    field_name: str = Field(max_length=64)
+    raw_value: str = Field(max_length=255)
+    reason: str = Field(max_length=255)
+    status: str = Field(default="pending", max_length=32)
+
+
+class NormalizationConflict(NormalizationConflictBase, table=True):
+    id: uuid.UUID = Field(default_factory=uuid.uuid4, primary_key=True)
+    raw_position_id: uuid.UUID = Field(foreign_key="rawposition.id", nullable=False, ondelete="CASCADE")
+    owner_id: uuid.UUID = Field(foreign_key="user.id", nullable=False, ondelete="CASCADE")
+    created_at: datetime = Field(default_factory=get_datetime_utc, sa_type=DateTime(timezone=True))  # type: ignore
+
+
+class AuditEventBase(SQLModel):
+    entity_type: str = Field(max_length=64, index=True)
+    entity_id: uuid.UUID = Field(index=True)
+    event_type: str = Field(max_length=64)
+    source_record_id: uuid.UUID | None = Field(default=None, index=True)
+    transform_version: str | None = Field(default=None, max_length=32)
+    changed_fields: str | None = Field(default=None, max_length=512)
+
+
+class AuditEvent(AuditEventBase, table=True):
+    id: uuid.UUID = Field(default_factory=uuid.uuid4, primary_key=True)
+    owner_id: uuid.UUID = Field(foreign_key="user.id", nullable=False, ondelete="CASCADE")
+    created_at: datetime = Field(default_factory=get_datetime_utc, sa_type=DateTime(timezone=True))  # type: ignore
+
+
+class UnifiedPosition(SQLModel):
+    symbol: str
+    asset_class: str
+    quantity: float
+    market_value_usd: float
+
+
+class UnifiedPortfolioResponse(SQLModel):
+    snapshot_version: str
+    stale: bool
+    data: list[UnifiedPosition]
+
+
+class HealthReportResponse(SQLModel):
+    week: str
+    generated_at: datetime
+    positions_count: int
+    total_market_value_usd: float
+    asset_class_count: int
+    anomaly_count: int
+    stale: bool
+
+
+class AuditEventPublic(SQLModel):
+    id: uuid.UUID
+    entity_type: str
+    entity_id: uuid.UUID
+    event_type: str
+    source_record_id: uuid.UUID | None = None
+    transform_version: str | None = None
+    changed_fields: str | None = None
+    created_at: datetime
+
+
+class AuditEventsPublic(SQLModel):
+    data: list[AuditEventPublic]
+    count: int
+
+
 # Generic message
 class Message(SQLModel):
     message: str
