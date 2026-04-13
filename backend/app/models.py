@@ -237,3 +237,71 @@ class TokenPayload(SQLModel):
 class NewPassword(SQLModel):
     token: str
     new_password: str = Field(min_length=8, max_length=128)
+
+
+class AssetInstrumentBase(SQLModel):
+    asset_type: str = Field(max_length=32, index=True)
+    symbol: str = Field(min_length=1, max_length=32, index=True)
+    display_name: str = Field(min_length=1, max_length=255)
+    canonical_name: str | None = Field(default=None, max_length=255)
+    market: str | None = Field(default=None, max_length=64)
+    exchange: str | None = Field(default=None, max_length=64)
+    currency: str = Field(default="USD", max_length=8)
+    country: str | None = Field(default=None, max_length=64)
+    category_level_1: str = Field(default="other", max_length=64)
+    category_level_2: str | None = Field(default=None, max_length=64)
+    status: str = Field(default="active", max_length=32)
+    sync_status: str = Field(default="manual", max_length=32)
+    external_source: str | None = Field(default=None, max_length=64)
+    external_id: str | None = Field(default=None, max_length=128)
+    is_active: bool = True
+
+
+class AssetInstrumentCreate(AssetInstrumentBase):
+    pass
+
+
+class AssetInstrumentUpdate(SQLModel):
+    asset_type: str | None = Field(default=None, max_length=32)
+    symbol: str | None = Field(default=None, min_length=1, max_length=32)
+    display_name: str | None = Field(default=None, min_length=1, max_length=255)
+    canonical_name: str | None = Field(default=None, max_length=255)
+    market: str | None = Field(default=None, max_length=64)
+    exchange: str | None = Field(default=None, max_length=64)
+    currency: str | None = Field(default=None, max_length=8)
+    country: str | None = Field(default=None, max_length=64)
+    category_level_1: str | None = Field(default=None, max_length=64)
+    category_level_2: str | None = Field(default=None, max_length=64)
+    status: str | None = Field(default=None, max_length=32)
+    sync_status: str | None = Field(default=None, max_length=32)
+    external_source: str | None = Field(default=None, max_length=64)
+    external_id: str | None = Field(default=None, max_length=128)
+    is_active: bool | None = None
+
+
+class AssetInstrument(AssetInstrumentBase, table=True):
+    id: uuid.UUID = Field(default_factory=uuid.uuid4, primary_key=True)
+    created_at: datetime = Field(
+        default_factory=get_datetime_utc,
+        sa_type=DateTime(timezone=True),  # type: ignore
+    )
+    updated_at: datetime = Field(
+        default_factory=get_datetime_utc,
+        sa_type=DateTime(timezone=True),  # type: ignore
+    )
+    last_synced_at: datetime | None = Field(
+        default=None,
+        sa_type=DateTime(timezone=True),  # type: ignore
+    )
+
+
+class AssetInstrumentPublic(AssetInstrumentBase):
+    id: uuid.UUID
+    created_at: datetime
+    updated_at: datetime
+    last_synced_at: datetime | None = None
+
+
+class AssetInstrumentsPublic(SQLModel):
+    data: list[AssetInstrumentPublic]
+    count: int

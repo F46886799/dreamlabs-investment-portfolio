@@ -9,7 +9,7 @@ import app.api.deps as api_deps
 import app.core.db as db_module
 from app.core.config import settings
 from app.main import app
-from app.models import AuditEvent, Item, NormalizationConflict, NormalizedPosition, RawPosition, User
+from app.models import AssetInstrument, AuditEvent, Item, NormalizationConflict, NormalizedPosition, RawPosition, User
 from tests.utils.user import authentication_token_from_email
 from tests.utils.utils import get_superuser_token_headers
 
@@ -33,6 +33,8 @@ def db(test_db_engine: None) -> Generator[Session, None, None]:
     with Session(db_module.engine) as session:
         db_module.init_db(session)
         yield session
+        statement = delete(AssetInstrument)
+        session.execute(statement)
         statement = delete(AuditEvent)
         session.execute(statement)
         statement = delete(NormalizationConflict)
