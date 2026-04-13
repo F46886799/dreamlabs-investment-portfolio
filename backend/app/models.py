@@ -316,6 +316,25 @@ class AssetInstrumentUpdate(SQLModel):
     external_id: str | None = Field(default=None, max_length=128)
     is_active: bool | None = None
 
+    @field_validator("asset_type")
+    @classmethod
+    def validate_asset_type(cls, value: str | None) -> str | None:
+        if value is None:
+            return None
+        return normalize_asset_type_value(value)
+
+    @field_validator("symbol")
+    @classmethod
+    def normalize_symbol(cls, value: str | None) -> str | None:
+        if value is None:
+            return None
+        return normalize_symbol_value(value)
+
+    @field_validator("exchange", "market")
+    @classmethod
+    def normalize_market_fields(cls, value: str | None) -> str | None:
+        return normalize_market_value(value)
+
 
 class AssetInstrument(AssetInstrumentBase, table=True):
     __table_args__ = (
