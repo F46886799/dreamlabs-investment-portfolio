@@ -1,4 +1,4 @@
-import { Briefcase, ChartPie, Home, Users } from "lucide-react"
+import { Briefcase, Building2, ChartPie, Home, Users } from "lucide-react"
 
 import { SidebarAppearance } from "@/components/Common/Appearance"
 import { Logo } from "@/components/Common/Logo"
@@ -22,7 +22,11 @@ export function AppSidebar() {
   const { user: currentUser } = useAuth()
 
   const items = currentUser?.is_superuser
-    ? [...baseItems, { icon: Users, title: "Admin", path: "/admin" }]
+    ? [
+        ...baseItems,
+        { icon: Users, title: "Admin", path: "/admin" },
+        { icon: Building2, title: "主体维护", path: "/subjects" },
+      ]
     : baseItems
 
   return (
