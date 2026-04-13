@@ -56,6 +56,9 @@ class User(UserBase, table=True):
         sa_type=DateTime(timezone=True),  # type: ignore
     )
     accounts: list["Account"] = Relationship(back_populates="owner", cascade_delete=True)
+    portfolios: list["Portfolio"] = Relationship(
+        back_populates="owner", cascade_delete=True
+    )
     items: list["Item"] = Relationship(back_populates="owner", cascade_delete=True)
 
 
@@ -153,6 +156,9 @@ class Account(AccountBase, table=True):
         sa_type=DateTime(timezone=True),  # type: ignore
     )
     owner: User | None = Relationship(back_populates="accounts")
+    portfolios: list["Portfolio"] = Relationship(
+        back_populates="account", cascade_delete=True
+    )
 
 
 class AccountPublic(AccountBase):
@@ -164,6 +170,49 @@ class AccountPublic(AccountBase):
 
 class AccountsPublic(SQLModel):
     data: list[AccountPublic]
+    count: int
+
+
+class PortfolioBase(SQLModel):
+    name: str = Field(min_length=1, max_length=255)
+    account_id: uuid.UUID
+    description: str | None = Field(default=None, max_length=1000)
+    is_active: bool = True
+
+
+class PortfolioCreate(PortfolioBase):
+    pass
+
+
+class Portfolio(PortfolioBase, table=True):
+    id: uuid.UUID = Field(default_factory=uuid.uuid4, primary_key=True)
+    account_id: uuid.UUID = Field(
+        foreign_key="account.id", nullable=False, ondelete="CASCADE"
+    )
+    owner_id: uuid.UUID = Field(
+        foreign_key="user.id", nullable=False, ondelete="CASCADE"
+    )
+    created_at: datetime = Field(
+        default_factory=get_datetime_utc,
+        sa_type=DateTime(timezone=True),  # type: ignore
+    )
+    updated_at: datetime = Field(
+        default_factory=get_datetime_utc,
+        sa_type=DateTime(timezone=True),  # type: ignore
+    )
+    account: Account | None = Relationship(back_populates="portfolios")
+    owner: User | None = Relationship(back_populates="portfolios")
+
+
+class PortfolioPublic(PortfolioBase):
+    id: uuid.UUID
+    owner_id: uuid.UUID
+    created_at: datetime
+    updated_at: datetime
+
+
+class PortfoliosPublic(SQLModel):
+    data: list[PortfolioPublic]
     count: int
 
 

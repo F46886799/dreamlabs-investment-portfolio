@@ -15,6 +15,7 @@ from app.models import (
     Item,
     NormalizationConflict,
     NormalizedPosition,
+    Portfolio,
     RawPosition,
     User,
 )
@@ -49,6 +50,8 @@ def db(test_db_engine: None) -> Generator[Session, None, None]:
         statement = delete(NormalizedPosition)
         session.execute(statement)
         statement = delete(RawPosition)
+        session.execute(statement)
+        statement = delete(Portfolio)
         session.execute(statement)
         statement = delete(Account)
         session.execute(statement)

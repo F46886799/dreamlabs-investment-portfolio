@@ -43,8 +43,23 @@ def upgrade():
         sa.ForeignKeyConstraint(["owner_id"], ["user.id"], ondelete="CASCADE"),
         sa.PrimaryKeyConstraint("id"),
     )
+    op.create_table(
+        "portfolio",
+        sa.Column("name", sa.String(length=255), nullable=False),
+        sa.Column("account_id", postgresql.UUID(as_uuid=True), nullable=False),
+        sa.Column("description", sa.String(length=1000), nullable=True),
+        sa.Column("is_active", sa.Boolean(), nullable=False),
+        sa.Column("id", postgresql.UUID(as_uuid=True), nullable=False),
+        sa.Column("owner_id", postgresql.UUID(as_uuid=True), nullable=False),
+        sa.Column("created_at", sa.DateTime(timezone=True), nullable=False),
+        sa.Column("updated_at", sa.DateTime(timezone=True), nullable=False),
+        sa.ForeignKeyConstraint(["account_id"], ["account.id"], ondelete="CASCADE"),
+        sa.ForeignKeyConstraint(["owner_id"], ["user.id"], ondelete="CASCADE"),
+        sa.PrimaryKeyConstraint("id"),
+    )
 
 
 def downgrade():
+    op.drop_table("portfolio")
     op.drop_table("account")
     account_type.drop(op.get_bind(), checkfirst=True)
