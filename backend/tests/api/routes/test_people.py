@@ -2,10 +2,10 @@ import uuid
 from datetime import timedelta
 
 from fastapi.testclient import TestClient
-from sqlmodel import Session
+from sqlmodel import Session, func, select
 
 from app.core.config import settings
-from app.models import PersonType
+from app.models import Person, PersonType
 from tests.utils.person import create_random_person
 
 
@@ -77,6 +77,7 @@ def test_read_person_not_enough_permissions(
 def test_read_people(
     client: TestClient, superuser_token_headers: dict[str, str], db: Session
 ) -> None:
+    existing_count = db.exec(select(func.count()).select_from(Person)).one()
     first_person = create_random_person(db)
     first_person.created_at = first_person.created_at - timedelta(days=1)
     db.add(first_person)
@@ -90,7 +91,7 @@ def test_read_people(
     )
     assert response.status_code == 200
     content = response.json()
-    assert content["count"] >= 2
+    assert content["count"] == existing_count + 2
     assert len(content["data"]) == 1
     assert content["data"][0]["id"] == str(second_person.id)
     assert content["data"][0]["id"] != str(first_person.id)
@@ -122,6 +123,20 @@ def test_update_person(
     assert content["updated_at"] != original_updated_at.isoformat()
 
 
+def test_update_person_not_found(
+    client: TestClient, superuser_token_headers: dict[str, str]
+) -> None:
+    response = client.patch(
+        f"{settings.API_V1_STR}/people/{uuid.uuid4()}",
+        headers=superuser_token_headers,
+        json={
+            "name": "Updated Name",
+        },
+    )
+    assert response.status_code == 404
+    assert response.json()["detail"] == "Person not found"
+
+
 def test_delete_person(
     client: TestClient, superuser_token_headers: dict[str, str], db: Session
 ) -> None:
@@ -132,3 +147,9 @@ def test_delete_person(
     )
     assert response.status_code == 200
     assert response.json()["message"] == "Person deleted successfully"
+    read_response = client.get(
+        f"{settings.API_V1_STR}/people/{person.id}",
+        headers=superuser_token_headers,
+    )
+    assert read_response.status_code == 404
+    assert read_response.json()["detail"] == "Person not found"
