@@ -211,18 +211,33 @@ def test_get_unified_portfolio_filtered_by_account(
     }
 
 
-def test_get_unified_portfolio_rejects_conflicting_filters(
+def test_get_unified_portfolio_rejects_truly_conflicting_filters(
     client: TestClient, superuser_token_headers: dict[str, str]
 ) -> None:
+    account = _create_account(client, superuser_token_headers, name="冲突主账户")
+    other_account = _create_account(client, superuser_token_headers, name="冲突副账户")
+    portfolio = client.post(
+        f"{settings.API_V1_STR}/portfolios",
+        headers=superuser_token_headers,
+        json={
+            "name": "冲突组合",
+            "account_id": account["id"],
+            "description": "组合归属冲突",
+            "is_active": True,
+        },
+    ).json()
+
     response = client.get(
         f"{settings.API_V1_STR}/portfolio/unified",
         headers=superuser_token_headers,
         params={
-            "account_id": "00000000-0000-0000-0000-000000000001",
-            "portfolio_id": "00000000-0000-0000-0000-000000000002",
+            "account_id": other_account["id"],
+            "portfolio_id": portfolio["id"],
         },
     )
+
     assert response.status_code == 409
+    assert response.json()["detail"] == "portfolio_id does not belong to account_id"
 
 
 def test_get_unified_portfolio_requires_owned_account(
@@ -316,6 +331,45 @@ def test_get_unified_portfolio_filtered_by_portfolio(
     }
 
 
+def test_get_unified_portfolio_accepts_consistent_filters(
+    client: TestClient, superuser_token_headers: dict[str, str]
+) -> None:
+    account = _create_account(client, superuser_token_headers, name="组合一致性账户")
+    portfolio = client.post(
+        f"{settings.API_V1_STR}/portfolios",
+        headers=superuser_token_headers,
+        json={
+            "name": "一致性组合",
+            "account_id": account["id"],
+            "description": "组合范围一致",
+            "is_active": True,
+        },
+    ).json()
+
+    sync_response = client.post(
+        f"{settings.API_V1_STR}/connectors/demo-broker/sync",
+        headers=superuser_token_headers,
+        params={"account_id": account["id"]},
+    )
+    assert sync_response.status_code == 200
+
+    response = client.get(
+        f"{settings.API_V1_STR}/portfolio/unified",
+        headers=superuser_token_headers,
+        params={
+            "account_id": account["id"],
+            "portfolio_id": portfolio["id"],
+        },
+    )
+
+    assert response.status_code == 200
+    assert response.json()["snapshot_version"] == sync_response.json()["snapshot_version"]
+    assert {position["symbol"] for position in response.json()["data"]} == {
+        "AAPL",
+        "BTC",
+    }
+
+
 def test_get_health_report(
     client: TestClient, superuser_token_headers: dict[str, str]
 ) -> None:
@@ -400,19 +454,68 @@ def test_get_health_report_filtered_by_portfolio(
     assert response.json()["anomaly_count"] == 1
 
 
-def test_get_health_report_rejects_conflicting_filters(
+def test_get_health_report_accepts_consistent_filters(
     client: TestClient, superuser_token_headers: dict[str, str]
 ) -> None:
+    account = _create_account(client, superuser_token_headers, name="健康一致性账户")
+    portfolio = client.post(
+        f"{settings.API_V1_STR}/portfolios",
+        headers=superuser_token_headers,
+        json={
+            "name": "健康一致性组合",
+            "account_id": account["id"],
+            "description": "健康范围一致",
+            "is_active": True,
+        },
+    ).json()
+
+    client.post(
+        f"{settings.API_V1_STR}/connectors/demo-broker/sync",
+        headers=superuser_token_headers,
+        params={"account_id": account["id"]},
+    )
+
     response = client.get(
         f"{settings.API_V1_STR}/portfolio/health-report",
         headers=superuser_token_headers,
         params={
-            "account_id": "00000000-0000-0000-0000-000000000001",
-            "portfolio_id": "00000000-0000-0000-0000-000000000002",
+            "account_id": account["id"],
+            "portfolio_id": portfolio["id"],
+        },
+    )
+
+    assert response.status_code == 200
+    assert response.json()["positions_count"] == 2
+    assert response.json()["anomaly_count"] == 1
+
+
+def test_get_health_report_rejects_truly_conflicting_filters(
+    client: TestClient, superuser_token_headers: dict[str, str]
+) -> None:
+    account = _create_account(client, superuser_token_headers, name="健康冲突主账户")
+    other_account = _create_account(client, superuser_token_headers, name="健康冲突副账户")
+    portfolio = client.post(
+        f"{settings.API_V1_STR}/portfolios",
+        headers=superuser_token_headers,
+        json={
+            "name": "健康冲突组合",
+            "account_id": account["id"],
+            "description": "健康归属冲突",
+            "is_active": True,
+        },
+    ).json()
+
+    response = client.get(
+        f"{settings.API_V1_STR}/portfolio/health-report",
+        headers=superuser_token_headers,
+        params={
+            "account_id": other_account["id"],
+            "portfolio_id": portfolio["id"],
         },
     )
 
     assert response.status_code == 409
+    assert response.json()["detail"] == "portfolio_id does not belong to account_id"
 
 
 def test_get_audit_events(

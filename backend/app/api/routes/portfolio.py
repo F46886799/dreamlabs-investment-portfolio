@@ -39,11 +39,6 @@ def _get_owned_account(
 def _get_aggregation_filters(
     filters: Annotated[PortfolioAggregationFilters, Depends()],
 ) -> PortfolioAggregationFilters:
-    if filters.account_id is not None and filters.portfolio_id is not None:
-        raise HTTPException(
-            status_code=409,
-            detail="account_id and portfolio_id cannot be combined",
-        )
     return filters
 
 

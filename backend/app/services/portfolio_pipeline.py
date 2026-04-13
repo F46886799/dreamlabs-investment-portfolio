@@ -155,6 +155,12 @@ def resolve_portfolio_scope(
     if not portfolio or portfolio.owner_id != owner_id:
         raise HTTPException(status_code=404, detail="Portfolio not found")
 
+    if account_id is not None and portfolio.account_id != account_id:
+        raise HTTPException(
+            status_code=409,
+            detail="portfolio_id does not belong to account_id",
+        )
+
     return portfolio.account_id
 
 
