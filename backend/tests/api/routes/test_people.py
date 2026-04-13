@@ -1,12 +1,22 @@
 import uuid
 from datetime import timedelta
 
+import pytest
 from fastapi.testclient import TestClient
-from sqlmodel import Session, func, select
+from sqlmodel import Session, delete
 
 from app.core.config import settings
 from app.models import Person, PersonType
 from tests.utils.person import create_random_person
+
+
+@pytest.fixture(autouse=True)
+def clean_people(db: Session) -> None:
+    db.execute(delete(Person))
+    db.commit()
+    yield
+    db.execute(delete(Person))
+    db.commit()
 
 
 def test_create_person(
@@ -77,7 +87,6 @@ def test_read_person_not_enough_permissions(
 def test_read_people(
     client: TestClient, superuser_token_headers: dict[str, str], db: Session
 ) -> None:
-    existing_count = db.exec(select(func.count()).select_from(Person)).one()
     first_person = create_random_person(db)
     first_person.created_at = first_person.created_at - timedelta(days=1)
     db.add(first_person)
@@ -91,10 +100,9 @@ def test_read_people(
     )
     assert response.status_code == 200
     content = response.json()
-    assert content["count"] == existing_count + 2
+    assert content["count"] == 2
     assert len(content["data"]) == 1
     assert content["data"][0]["id"] == str(second_person.id)
-    assert content["data"][0]["id"] != str(first_person.id)
 
 
 def test_update_person(
