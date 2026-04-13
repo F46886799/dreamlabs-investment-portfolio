@@ -1,12 +1,22 @@
 import uuid
 from datetime import timedelta
 
+import pytest
 from fastapi.testclient import TestClient
-from sqlmodel import Session
+from sqlmodel import Session, delete
 
 from app.core.config import settings
-from app.models import OrganizationType
+from app.models import Organization, OrganizationType
 from tests.utils.organization import create_random_organization
+
+
+@pytest.fixture(autouse=True)
+def clean_organizations(db: Session) -> None:
+    db.execute(delete(Organization))
+    db.commit()
+    yield
+    db.execute(delete(Organization))
+    db.commit()
 
 
 def test_create_organization(
@@ -32,6 +42,21 @@ def test_create_organization(
     assert "id" in content
     assert "created_at" in content
     assert "updated_at" in content
+
+
+def test_create_organization_not_enough_permissions(
+    client: TestClient, normal_user_token_headers: dict[str, str]
+) -> None:
+    response = client.post(
+        f"{settings.API_V1_STR}/organizations/",
+        headers=normal_user_token_headers,
+        json={
+            "organization_type": OrganizationType.service_provider.value,
+            "name": "Acme Capital",
+        },
+    )
+    assert response.status_code == 403
+    assert response.json()["detail"] == "The user doesn't have enough privileges"
 
 
 def test_read_organization(
@@ -90,7 +115,7 @@ def test_read_organizations(
     )
     assert response.status_code == 200
     content = response.json()
-    assert content["count"] >= 2
+    assert content["count"] == 2
     assert len(content["data"]) == 1
     assert content["data"][0]["id"] == str(second_organization.id)
     assert content["data"][0]["id"] != str(first_organization.id)
@@ -102,6 +127,19 @@ def test_read_organizations_not_enough_permissions(
     response = client.get(
         f"{settings.API_V1_STR}/organizations/",
         headers=normal_user_token_headers,
+    )
+    assert response.status_code == 403
+    assert response.json()["detail"] == "The user doesn't have enough privileges"
+
+
+def test_update_organization_not_enough_permissions(
+    client: TestClient, normal_user_token_headers: dict[str, str], db: Session
+) -> None:
+    organization = create_random_organization(db)
+    response = client.patch(
+        f"{settings.API_V1_STR}/organizations/{organization.id}",
+        headers=normal_user_token_headers,
+        json={"name": "Updated Name"},
     )
     assert response.status_code == 403
     assert response.json()["detail"] == "The user doesn't have enough privileges"
@@ -133,6 +171,30 @@ def test_update_organization(
     assert content["updated_at"] != original_updated_at.isoformat()
 
 
+def test_update_organization_not_found(
+    client: TestClient, superuser_token_headers: dict[str, str]
+) -> None:
+    response = client.patch(
+        f"{settings.API_V1_STR}/organizations/{uuid.uuid4()}",
+        headers=superuser_token_headers,
+        json={"name": "Updated Name"},
+    )
+    assert response.status_code == 404
+    assert response.json()["detail"] == "Organization not found"
+
+
+def test_delete_organization_not_enough_permissions(
+    client: TestClient, normal_user_token_headers: dict[str, str], db: Session
+) -> None:
+    organization = create_random_organization(db)
+    response = client.delete(
+        f"{settings.API_V1_STR}/organizations/{organization.id}",
+        headers=normal_user_token_headers,
+    )
+    assert response.status_code == 403
+    assert response.json()["detail"] == "The user doesn't have enough privileges"
+
+
 def test_delete_organization(
     client: TestClient, superuser_token_headers: dict[str, str], db: Session
 ) -> None:
@@ -143,3 +205,20 @@ def test_delete_organization(
     )
     assert response.status_code == 200
     assert response.json()["message"] == "Organization deleted successfully"
+    read_response = client.get(
+        f"{settings.API_V1_STR}/organizations/{organization.id}",
+        headers=superuser_token_headers,
+    )
+    assert read_response.status_code == 404
+    assert read_response.json()["detail"] == "Organization not found"
+
+
+def test_delete_organization_not_found(
+    client: TestClient, superuser_token_headers: dict[str, str]
+) -> None:
+    response = client.delete(
+        f"{settings.API_V1_STR}/organizations/{uuid.uuid4()}",
+        headers=superuser_token_headers,
+    )
+    assert response.status_code == 404
+    assert response.json()["detail"] == "Organization not found"
