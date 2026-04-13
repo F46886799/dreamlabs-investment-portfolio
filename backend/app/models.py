@@ -2,7 +2,7 @@ import uuid
 from datetime import datetime, timezone
 
 from pydantic import EmailStr
-from sqlalchemy import DateTime
+from sqlalchemy import DateTime, Index, text
 from sqlmodel import Field, Relationship, SQLModel
 
 
@@ -280,6 +280,17 @@ class AssetInstrumentUpdate(SQLModel):
 
 
 class AssetInstrument(AssetInstrumentBase, table=True):
+    __table_args__ = (
+        Index(
+            "uq_assetinstrument_type_symbol_exchange_market",
+            "asset_type",
+            "symbol",
+            text("coalesce(exchange, '')"),
+            text("coalesce(market, '')"),
+            unique=True,
+        ),
+    )
+
     id: uuid.UUID = Field(default_factory=uuid.uuid4, primary_key=True)
     created_at: datetime = Field(
         default_factory=get_datetime_utc,
