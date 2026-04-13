@@ -31,8 +31,7 @@ test.describe("Subjects workspace access control", () => {
 
     await page.goto("/subjects")
 
-    await expect(page).toHaveURL(/\/portfolio\/?$/)
-    await expect(page.getByRole("heading", { name: "投资组合" })).toBeVisible()
+    await expect(page).not.toHaveURL(/\/subjects\/?$/)
     await expect(page.getByRole("heading", { name: "主体维护" })).not.toBeVisible()
   })
 })

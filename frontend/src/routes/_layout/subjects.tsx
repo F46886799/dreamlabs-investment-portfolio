@@ -1,4 +1,4 @@
-import { useSuspenseQuery } from "@tanstack/react-query"
+import { useSuspenseQueries } from "@tanstack/react-query"
 import { createFileRoute, redirect } from "@tanstack/react-router"
 import type { LucideIcon } from "lucide-react"
 import { AlertCircle, Building2, Users } from "lucide-react"
@@ -21,7 +21,7 @@ function getPeopleQueryOptions() {
   return {
     queryFn: () =>
       PeopleService.readPeople({ skip: 0, limit: SUBJECT_PREVIEW_LIMIT }),
-    queryKey: ["subjects", "people"],
+    queryKey: ["people"],
   }
 }
 
@@ -32,7 +32,7 @@ function getOrganizationsQueryOptions() {
         skip: 0,
         limit: SUBJECT_PREVIEW_LIMIT,
       }),
-    queryKey: ["subjects", "organizations"],
+    queryKey: ["organizations"],
   }
 }
 
@@ -132,8 +132,9 @@ function SubjectCard({
 }
 
 function SubjectsShellContent() {
-  const { data: people } = useSuspenseQuery(getPeopleQueryOptions())
-  const { data: organizations } = useSuspenseQuery(getOrganizationsQueryOptions())
+  const [{ data: people }, { data: organizations }] = useSuspenseQueries({
+    queries: [getPeopleQueryOptions(), getOrganizationsQueryOptions()],
+  })
 
   return (
     <Tabs defaultValue="people" className="gap-6">
