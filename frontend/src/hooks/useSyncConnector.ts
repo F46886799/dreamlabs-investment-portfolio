@@ -9,7 +9,10 @@ export function useSyncConnector(defaultSource = "demo-broker") {
 
   return useMutation({
     mutationFn: (source?: string) =>
-      PortfolioService.syncConnectorPositions({ source: source ?? defaultSource }),
+      // Keep the existing overview sync behavior until explicit account selection is added.
+      PortfolioService.syncConnectorPositions({
+        source: source ?? defaultSource,
+      } as never),
     onError: () => {
       showErrorToast("同步失败，请稍后重试")
     },

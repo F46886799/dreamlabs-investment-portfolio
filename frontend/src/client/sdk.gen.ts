@@ -3,7 +3,48 @@
 import type { CancelablePromise } from './core/CancelablePromise';
 import { OpenAPI } from './core/OpenAPI';
 import { request as __request } from './core/request';
-import type { ItemsReadItemsData, ItemsReadItemsResponse, ItemsCreateItemData, ItemsCreateItemResponse, ItemsReadItemData, ItemsReadItemResponse, ItemsUpdateItemData, ItemsUpdateItemResponse, ItemsDeleteItemData, ItemsDeleteItemResponse, LoginLoginAccessTokenData, LoginLoginAccessTokenResponse, LoginTestTokenResponse, LoginRecoverPasswordData, LoginRecoverPasswordResponse, LoginResetPasswordData, LoginResetPasswordResponse, LoginRecoverPasswordHtmlContentData, LoginRecoverPasswordHtmlContentResponse, PortfolioSyncConnectorPositionsData, PortfolioSyncConnectorPositionsResponse, PortfolioGetUnifiedPortfolioResponse, PortfolioGetHealthReportResponse, PortfolioGetAuditEventsResponse, PrivateCreateUserData, PrivateCreateUserResponse, UsersReadUsersData, UsersReadUsersResponse, UsersCreateUserData, UsersCreateUserResponse, UsersReadUserMeResponse, UsersDeleteUserMeResponse, UsersUpdateUserMeData, UsersUpdateUserMeResponse, UsersUpdatePasswordMeData, UsersUpdatePasswordMeResponse, UsersRegisterUserData, UsersRegisterUserResponse, UsersReadUserByIdData, UsersReadUserByIdResponse, UsersUpdateUserData, UsersUpdateUserResponse, UsersDeleteUserData, UsersDeleteUserResponse, UtilsTestEmailData, UtilsTestEmailResponse, UtilsHealthCheckResponse } from './types.gen';
+import type { AccountsCreateAccountData, AccountsCreateAccountResponse, AccountsReadAccountsData, AccountsReadAccountsResponse, ItemsReadItemsData, ItemsReadItemsResponse, ItemsCreateItemData, ItemsCreateItemResponse, ItemsReadItemData, ItemsReadItemResponse, ItemsUpdateItemData, ItemsUpdateItemResponse, ItemsDeleteItemData, ItemsDeleteItemResponse, LoginLoginAccessTokenData, LoginLoginAccessTokenResponse, LoginTestTokenResponse, LoginRecoverPasswordData, LoginRecoverPasswordResponse, LoginResetPasswordData, LoginResetPasswordResponse, LoginRecoverPasswordHtmlContentData, LoginRecoverPasswordHtmlContentResponse, PortfolioSyncConnectorPositionsData, PortfolioSyncConnectorPositionsResponse, PortfolioGetUnifiedPortfolioData, PortfolioGetUnifiedPortfolioResponse, PortfolioGetHealthReportData, PortfolioGetHealthReportResponse, PortfolioGetAuditEventsResponse, PortfoliosCreatePortfolioData, PortfoliosCreatePortfolioResponse, PortfoliosReadPortfoliosData, PortfoliosReadPortfoliosResponse, PrivateCreateUserData, PrivateCreateUserResponse, UsersReadUsersData, UsersReadUsersResponse, UsersCreateUserData, UsersCreateUserResponse, UsersReadUserMeResponse, UsersDeleteUserMeResponse, UsersUpdateUserMeData, UsersUpdateUserMeResponse, UsersUpdatePasswordMeData, UsersUpdatePasswordMeResponse, UsersRegisterUserData, UsersRegisterUserResponse, UsersReadUserByIdData, UsersReadUserByIdResponse, UsersUpdateUserData, UsersUpdateUserResponse, UsersDeleteUserData, UsersDeleteUserResponse, UtilsTestEmailData, UtilsTestEmailResponse, UtilsHealthCheckResponse } from './types.gen';
+
+export class AccountsService {
+    /**
+     * Create Account
+     * @param data The data for the request.
+     * @param data.requestBody
+     * @returns AccountPublic Successful Response
+     * @throws ApiError
+     */
+    public static createAccount(data: AccountsCreateAccountData): CancelablePromise<AccountsCreateAccountResponse> {
+        return __request(OpenAPI, {
+            method: 'POST',
+            url: '/api/v1/accounts',
+            body: data.requestBody,
+            mediaType: 'application/json',
+            errors: {
+                422: 'Validation Error'
+            }
+        });
+    }
+    
+    /**
+     * Read Accounts
+     * @param data The data for the request.
+     * @param data.includeInactive
+     * @returns AccountsPublic Successful Response
+     * @throws ApiError
+     */
+    public static readAccounts(data: AccountsReadAccountsData = {}): CancelablePromise<AccountsReadAccountsResponse> {
+        return __request(OpenAPI, {
+            method: 'GET',
+            url: '/api/v1/accounts',
+            query: {
+                include_inactive: data.includeInactive
+            },
+            errors: {
+                422: 'Validation Error'
+            }
+        });
+    }
+}
 
 export class ItemsService {
     /**
@@ -218,6 +259,7 @@ export class PortfolioService {
      * Sync Connector Positions
      * @param data The data for the request.
      * @param data.source
+     * @param data.accountId
      * @returns ConnectorSyncResponse Successful Response
      * @throws ApiError
      */
@@ -228,6 +270,9 @@ export class PortfolioService {
             path: {
                 source: data.source
             },
+            query: {
+                account_id: data.accountId
+            },
             errors: {
                 422: 'Validation Error'
             }
@@ -236,25 +281,45 @@ export class PortfolioService {
     
     /**
      * Get Unified Portfolio
+     * @param data The data for the request.
+     * @param data.accountId
+     * @param data.portfolioId
      * @returns UnifiedPortfolioResponse Successful Response
      * @throws ApiError
      */
-    public static getUnifiedPortfolio(): CancelablePromise<PortfolioGetUnifiedPortfolioResponse> {
+    public static getUnifiedPortfolio(data: PortfolioGetUnifiedPortfolioData = {}): CancelablePromise<PortfolioGetUnifiedPortfolioResponse> {
         return __request(OpenAPI, {
             method: 'GET',
-            url: '/api/v1/portfolio/unified'
+            url: '/api/v1/portfolio/unified',
+            query: {
+                account_id: data.accountId,
+                portfolio_id: data.portfolioId
+            },
+            errors: {
+                422: 'Validation Error'
+            }
         });
     }
     
     /**
      * Get Health Report
+     * @param data The data for the request.
+     * @param data.accountId
+     * @param data.portfolioId
      * @returns HealthReportResponse Successful Response
      * @throws ApiError
      */
-    public static getHealthReport(): CancelablePromise<PortfolioGetHealthReportResponse> {
+    public static getHealthReport(data: PortfolioGetHealthReportData = {}): CancelablePromise<PortfolioGetHealthReportResponse> {
         return __request(OpenAPI, {
             method: 'GET',
-            url: '/api/v1/portfolio/health-report'
+            url: '/api/v1/portfolio/health-report',
+            query: {
+                account_id: data.accountId,
+                portfolio_id: data.portfolioId
+            },
+            errors: {
+                422: 'Validation Error'
+            }
         });
     }
     
@@ -267,6 +332,47 @@ export class PortfolioService {
         return __request(OpenAPI, {
             method: 'GET',
             url: '/api/v1/audit/events'
+        });
+    }
+}
+
+export class PortfoliosService {
+    /**
+     * Create Portfolio
+     * @param data The data for the request.
+     * @param data.requestBody
+     * @returns PortfolioPublic Successful Response
+     * @throws ApiError
+     */
+    public static createPortfolio(data: PortfoliosCreatePortfolioData): CancelablePromise<PortfoliosCreatePortfolioResponse> {
+        return __request(OpenAPI, {
+            method: 'POST',
+            url: '/api/v1/portfolios',
+            body: data.requestBody,
+            mediaType: 'application/json',
+            errors: {
+                422: 'Validation Error'
+            }
+        });
+    }
+    
+    /**
+     * Read Portfolios
+     * @param data The data for the request.
+     * @param data.includeInactive
+     * @returns PortfoliosPublic Successful Response
+     * @throws ApiError
+     */
+    public static readPortfolios(data: PortfoliosReadPortfoliosData = {}): CancelablePromise<PortfoliosReadPortfoliosResponse> {
+        return __request(OpenAPI, {
+            method: 'GET',
+            url: '/api/v1/portfolios',
+            query: {
+                include_inactive: data.includeInactive
+            },
+            errors: {
+                422: 'Validation Error'
+            }
         });
     }
 }

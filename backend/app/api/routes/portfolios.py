@@ -1,9 +1,16 @@
 import uuid
 
 from fastapi import APIRouter, HTTPException
+from sqlmodel import col, select
 
 from app.api.deps import CurrentUser, SessionDep
-from app.models import Account, Portfolio, PortfolioCreate, PortfolioPublic
+from app.models import (
+    Account,
+    Portfolio,
+    PortfolioCreate,
+    PortfolioPublic,
+    PortfoliosPublic,
+)
 
 router = APIRouter(prefix="/portfolios", tags=["portfolios"])
 
@@ -35,3 +42,19 @@ def create_portfolio(
     session.commit()
     session.refresh(portfolio)
     return PortfolioPublic.model_validate(portfolio)
+
+
+@router.get("", response_model=PortfoliosPublic)
+def read_portfolios(
+    session: SessionDep,
+    current_user: CurrentUser,
+    include_inactive: bool = False,
+) -> PortfoliosPublic:
+    statement = select(Portfolio).where(Portfolio.owner_id == current_user.id)
+    if not include_inactive:
+        statement = statement.where(col(Portfolio.is_active).is_(True))
+    rows = session.exec(statement.order_by(col(Portfolio.updated_at).desc())).all()
+    return PortfoliosPublic(
+        data=[PortfolioPublic.model_validate(row) for row in rows],
+        count=len(rows),
+    )

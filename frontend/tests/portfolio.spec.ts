@@ -17,6 +17,31 @@ const mockPortfolioApis = async (page: Page) => {
     })
   })
 
+  await page.route("**/api/v1/accounts**", async (route) => {
+    await route.fulfill({
+      contentType: "application/json",
+      status: 200,
+      body: JSON.stringify({
+        data: [
+          {
+            id: "7c3b1f78-f5d4-4d65-a15a-3f0a5c348001",
+            name: "盈透证券主账户",
+            account_type: "brokerage",
+            institution_name: "Interactive Brokers",
+            account_mask: "****1234",
+            base_currency: "USD",
+            notes: "主要美股账户",
+            is_active: true,
+            owner_id: "f335249f-4f95-40db-b986-17f811acc359",
+            created_at: "2026-04-11T14:30:22.000000+00:00",
+            updated_at: "2026-04-11T14:30:22.000000+00:00",
+          },
+        ],
+        count: 1,
+      }),
+    })
+  })
+
   await page.route("**/api/v1/portfolio/unified", async (route) => {
     await route.fulfill({
       contentType: "application/json",
@@ -89,6 +114,98 @@ test.describe("Portfolio pages", () => {
     await mockPortfolioApis(page)
   })
 
+  test("Accounts page shows account table and create action", async ({
+    page,
+  }) => {
+    await page.route("**/api/v1/accounts**", async (route) => {
+      await route.fulfill({
+        contentType: "application/json",
+        status: 200,
+        body: JSON.stringify({
+          data: [
+            {
+              id: "7c3b1f78-f5d4-4d65-a15a-3f0a5c348001",
+              name: "盈透证券主账户",
+              account_type: "brokerage",
+              institution_name: "Interactive Brokers",
+              account_mask: "****1234",
+              base_currency: "USD",
+              notes: "主要美股账户",
+              is_active: true,
+              owner_id: "f335249f-4f95-40db-b986-17f811acc359",
+              created_at: "2026-04-11T14:30:22.000000+00:00",
+              updated_at: "2026-04-11T14:30:22.000000+00:00",
+            },
+          ],
+          count: 1,
+        }),
+      })
+    })
+
+    await page.goto("/accounts")
+
+    await expect(page.getByRole("heading", { name: "账户管理" })).toBeVisible()
+    await expect(page.getByRole("button", { name: "新增账户" })).toBeVisible()
+    await expect(page.getByText("盈透证券主账户")).toBeVisible()
+  })
+
+  test("Portfolios page shows portfolio table and create action", async ({
+    page,
+  }) => {
+    await page.route("**/api/v1/accounts**", async (route) => {
+      await route.fulfill({
+        contentType: "application/json",
+        status: 200,
+        body: JSON.stringify({
+          data: [
+            {
+              id: "7c3b1f78-f5d4-4d65-a15a-3f0a5c348001",
+              name: "盈透证券主账户",
+              account_type: "brokerage",
+              institution_name: "Interactive Brokers",
+              account_mask: "****1234",
+              base_currency: "USD",
+              notes: "主要美股账户",
+              is_active: true,
+              owner_id: "f335249f-4f95-40db-b986-17f811acc359",
+              created_at: "2026-04-11T14:30:22.000000+00:00",
+              updated_at: "2026-04-11T14:30:22.000000+00:00",
+            },
+          ],
+          count: 1,
+        }),
+      })
+    })
+
+    await page.route("**/api/v1/portfolios**", async (route) => {
+      await route.fulfill({
+        contentType: "application/json",
+        status: 200,
+        body: JSON.stringify({
+          data: [
+            {
+              id: "967db092-1a4e-4f85-a0d5-1afca5d5e012",
+              name: "全球多资产组合",
+              account_id: "7c3b1f78-f5d4-4d65-a15a-3f0a5c348001",
+              description: "核心权益与现金配置",
+              is_active: true,
+              owner_id: "f335249f-4f95-40db-b986-17f811acc359",
+              created_at: "2026-04-11T14:30:22.000000+00:00",
+              updated_at: "2026-04-11T14:30:22.000000+00:00",
+            },
+          ],
+          count: 1,
+        }),
+      })
+    })
+
+    await page.goto("/portfolios")
+
+    await expect(page.getByRole("heading", { name: "组合管理" })).toBeVisible()
+    await expect(page.getByRole("button", { name: "新增组合" })).toBeVisible()
+    await expect(page.getByText("全球多资产组合")).toBeVisible()
+  })
+
   test("Overview page shows core portfolio widgets", async ({ page }) => {
     await page.goto("/portfolio")
 
@@ -101,10 +218,14 @@ test.describe("Portfolio pages", () => {
     await expect(page.getByRole("link", { name: "审计日志" })).toBeVisible()
   })
 
-  test("Conflicts page shows normalization conflict records", async ({ page }) => {
+  test("Conflicts page shows normalization conflict records", async ({
+    page,
+  }) => {
     await page.goto("/portfolio/conflicts")
 
-    await expect(page.getByRole("heading", { name: "标准化冲突" })).toBeVisible()
+    await expect(
+      page.getByRole("heading", { name: "标准化冲突" }),
+    ).toBeVisible()
     await expect(page.getByText("冲突事件列表")).toBeVisible()
     await expect(
       page.getByText("770e8400-e29b-41d4-a716-446655440002"),

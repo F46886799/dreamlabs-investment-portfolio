@@ -22,7 +22,9 @@ const columns: ColumnDef<UnifiedPosition>[] = [
     accessorKey: "quantity",
     header: "数量",
     cell: ({ row }) => (
-      <span className="font-mono tabular-nums">{row.original.quantity.toFixed(4)}</span>
+      <span className="font-mono tabular-nums">
+        {row.original.quantity.toFixed(4)}
+      </span>
     ),
   },
   {
