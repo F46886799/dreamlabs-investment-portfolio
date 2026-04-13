@@ -1,3 +1,4 @@
+import enum
 import uuid
 from datetime import datetime, timezone
 
@@ -105,6 +106,54 @@ class ItemPublic(ItemBase):
 
 class ItemsPublic(SQLModel):
     data: list[ItemPublic]
+    count: int
+
+
+class PersonType(str, enum.Enum):
+    internal_member = "internal_member"
+    client_contact = "client_contact"
+    external_advisor = "external_advisor"
+    other = "other"
+
+
+class PersonBase(SQLModel):
+    person_type: PersonType
+    name: str = Field(min_length=1, max_length=255)
+    alias: str | None = Field(default=None, max_length=255)
+    notes: str | None = Field(default=None, max_length=1000)
+
+
+class PersonCreate(PersonBase):
+    pass
+
+
+class PersonUpdate(SQLModel):
+    person_type: PersonType | None = None
+    name: str | None = Field(default=None, min_length=1, max_length=255)
+    alias: str | None = Field(default=None, max_length=255)
+    notes: str | None = Field(default=None, max_length=1000)
+
+
+class Person(PersonBase, table=True):
+    id: uuid.UUID = Field(default_factory=uuid.uuid4, primary_key=True)
+    created_at: datetime | None = Field(
+        default_factory=get_datetime_utc,
+        sa_type=DateTime(timezone=True),  # type: ignore
+    )
+    updated_at: datetime | None = Field(
+        default_factory=get_datetime_utc,
+        sa_type=DateTime(timezone=True),  # type: ignore
+    )
+
+
+class PersonPublic(PersonBase):
+    id: uuid.UUID
+    created_at: datetime | None = None
+    updated_at: datetime | None = None
+
+
+class PeoplePublic(SQLModel):
+    data: list[PersonPublic]
     count: int
 
 
