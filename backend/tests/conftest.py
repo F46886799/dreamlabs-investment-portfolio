@@ -3,13 +3,21 @@ from collections.abc import Generator
 import pytest
 from fastapi.testclient import TestClient
 from sqlalchemy.pool import StaticPool
-from sqlmodel import SQLModel, Session, create_engine, delete
+from sqlmodel import Session, SQLModel, create_engine, delete
 
 import app.api.deps as api_deps
 import app.core.db as db_module
 from app.core.config import settings
 from app.main import app
-from app.models import AuditEvent, Item, NormalizationConflict, NormalizedPosition, RawPosition, User
+from app.models import (
+    Account,
+    AuditEvent,
+    Item,
+    NormalizationConflict,
+    NormalizedPosition,
+    RawPosition,
+    User,
+)
 from tests.utils.user import authentication_token_from_email
 from tests.utils.utils import get_superuser_token_headers
 
@@ -30,6 +38,7 @@ def test_db_engine() -> Generator[None, None, None]:
 
 @pytest.fixture(scope="session", autouse=True)
 def db(test_db_engine: None) -> Generator[Session, None, None]:
+    _ = test_db_engine
     with Session(db_module.engine) as session:
         db_module.init_db(session)
         yield session
@@ -40,6 +49,8 @@ def db(test_db_engine: None) -> Generator[Session, None, None]:
         statement = delete(NormalizedPosition)
         session.execute(statement)
         statement = delete(RawPosition)
+        session.execute(statement)
+        statement = delete(Account)
         session.execute(statement)
         statement = delete(Item)
         session.execute(statement)

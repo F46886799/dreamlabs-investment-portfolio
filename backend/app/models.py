@@ -1,8 +1,10 @@
 import uuid
 from datetime import datetime, timezone
+from enum import Enum
 
 from pydantic import EmailStr
-from sqlalchemy import DateTime
+from sqlalchemy import Column, DateTime
+from sqlalchemy import Enum as SAEnum
 from sqlmodel import Field, Relationship, SQLModel
 
 
@@ -53,6 +55,7 @@ class User(UserBase, table=True):
         default_factory=get_datetime_utc,
         sa_type=DateTime(timezone=True),  # type: ignore
     )
+    accounts: list["Account"] = Relationship(back_populates="owner", cascade_delete=True)
     items: list["Item"] = Relationship(back_populates="owner", cascade_delete=True)
 
 
@@ -105,6 +108,62 @@ class ItemPublic(ItemBase):
 
 class ItemsPublic(SQLModel):
     data: list[ItemPublic]
+    count: int
+
+
+class AccountType(str, Enum):
+    BROKERAGE = "brokerage"
+    BANK = "bank"
+
+
+class AccountBase(SQLModel):
+    name: str = Field(min_length=1, max_length=255)
+    account_type: AccountType = Field(
+        sa_column=Column(
+            SAEnum(
+                AccountType,
+                values_callable=lambda members: [member.value for member in members],
+                name="accounttype",
+            ),
+            nullable=False,
+        )
+    )
+    institution_name: str = Field(min_length=1, max_length=255)
+    account_mask: str | None = Field(default=None, max_length=32)
+    base_currency: str = Field(default="USD", max_length=8)
+    notes: str | None = Field(default=None, max_length=1000)
+    is_active: bool = True
+
+
+class AccountCreate(AccountBase):
+    pass
+
+
+class Account(AccountBase, table=True):
+    id: uuid.UUID = Field(default_factory=uuid.uuid4, primary_key=True)
+    owner_id: uuid.UUID = Field(
+        foreign_key="user.id", nullable=False, ondelete="CASCADE"
+    )
+    created_at: datetime = Field(
+        default_factory=get_datetime_utc,
+        sa_type=DateTime(timezone=True),  # type: ignore
+    )
+    updated_at: datetime = Field(
+        default_factory=get_datetime_utc,
+        sa_type=DateTime(timezone=True),  # type: ignore
+    )
+    owner: User | None = Relationship(back_populates="accounts")
+
+
+class AccountPublic(AccountBase):
+    id: uuid.UUID
+    owner_id: uuid.UUID
+    created_at: datetime
+    updated_at: datetime
+
+
+class AccountsPublic(SQLModel):
+    data: list[AccountPublic]
     count: int
 
 
