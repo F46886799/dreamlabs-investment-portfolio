@@ -56,6 +56,7 @@ def ingest_positions(
     session: Session,
     owner_id: UUID,
     source: str,
+    account_id: UUID,
 ) -> tuple[str, int, int, int]:
     rows = fetch_connector_positions(source)
     snapshot_version = datetime.now(timezone.utc).strftime("%Y%m%dT%H%M%SZ")
@@ -74,6 +75,7 @@ def ingest_positions(
             market_value=float(row["market_value"]),
             currency=str(row["currency"]),
             owner_id=owner_id,
+            account_id=account_id,
         )
         session.add(raw_position)
         session.flush()

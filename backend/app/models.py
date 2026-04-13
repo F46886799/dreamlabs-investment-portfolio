@@ -156,6 +156,7 @@ class Account(AccountBase, table=True):
         sa_type=DateTime(timezone=True),  # type: ignore
     )
     owner: User | None = Relationship(back_populates="accounts")
+    raw_positions: list["RawPosition"] = Relationship(back_populates="account")
     portfolios: list["Portfolio"] = Relationship(
         back_populates="account", cascade_delete=True
     )
@@ -238,7 +239,11 @@ class RawPositionBase(SQLModel):
 class RawPosition(RawPositionBase, table=True):
     id: uuid.UUID = Field(default_factory=uuid.uuid4, primary_key=True)
     owner_id: uuid.UUID = Field(foreign_key="user.id", nullable=False, ondelete="CASCADE")
+    account_id: uuid.UUID = Field(
+        foreign_key="account.id", nullable=False, ondelete="RESTRICT"
+    )
     fetched_at: datetime = Field(default_factory=get_datetime_utc, sa_type=DateTime(timezone=True))  # type: ignore
+    account: Account | None = Relationship(back_populates="raw_positions")
 
 
 class NormalizedPositionBase(SQLModel):
