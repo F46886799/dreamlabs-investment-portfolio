@@ -1,28 +1,40 @@
-import { useSuspenseQueries } from "@tanstack/react-query"
-import { createFileRoute, redirect } from "@tanstack/react-router"
-import type { LucideIcon } from "lucide-react"
-import { AlertCircle, Building2, Users } from "lucide-react"
-import { Suspense } from "react"
+import { useSuspenseQueries } from "@tanstack/react-query";
+import { createFileRoute, redirect } from "@tanstack/react-router";
+import type { LucideIcon } from "lucide-react";
+import { AlertCircle, Building2, Users } from "lucide-react";
+import { Suspense } from "react";
 
-import { OrganizationsService, PeopleService, UsersService } from "@/client"
-import PendingSubjects from "@/components/Pending/PendingSubjects"
+import { OrganizationsService, PeopleService, UsersService } from "@/client";
+import { DataTable } from "@/components/Common/DataTable";
+import PendingSubjects from "@/components/Pending/PendingSubjects";
+import AddPerson from "@/components/Subjects/People/AddPerson";
+import { columns } from "@/components/Subjects/People/columns";
 import {
   Card,
   CardContent,
   CardDescription,
   CardHeader,
   CardTitle,
-} from "@/components/ui/card"
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
+} from "@/components/ui/card";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 
-const SUBJECT_PREVIEW_LIMIT = 5
+const SUBJECT_PREVIEW_LIMIT = 5;
+
+async function readAllPeople() {
+  const preview = await PeopleService.readPeople({ skip: 0, limit: 1 });
+
+  if (preview.count <= preview.data.length) {
+    return preview;
+  }
+
+  return PeopleService.readPeople({ skip: 0, limit: preview.count });
+}
 
 function getPeopleQueryOptions() {
   return {
-    queryFn: () =>
-      PeopleService.readPeople({ skip: 0, limit: SUBJECT_PREVIEW_LIMIT }),
+    queryFn: readAllPeople,
     queryKey: ["people"],
-  }
+  };
 }
 
 function getOrganizationsQueryOptions() {
@@ -33,17 +45,17 @@ function getOrganizationsQueryOptions() {
         limit: SUBJECT_PREVIEW_LIMIT,
       }),
     queryKey: ["organizations"],
-  }
+  };
 }
 
 export const Route = createFileRoute("/_layout/subjects")({
   component: Subjects,
   beforeLoad: async () => {
-    const user = await UsersService.readUserMe()
+    const user = await UsersService.readUserMe();
     if (!user.is_superuser) {
       throw redirect({
         to: "/",
-      })
+      });
     }
   },
   head: () => ({
@@ -53,20 +65,20 @@ export const Route = createFileRoute("/_layout/subjects")({
       },
     ],
   }),
-})
+});
 
 type SubjectCardProps = {
-  count: number
-  description: string
-  emptyCopy: string
-  icon: LucideIcon
+  count: number;
+  description: string;
+  emptyCopy: string;
+  icon: LucideIcon;
   items: Array<{
-    alias?: string | null
-    id: string
-    name: string
-  }>
-  title: string
-}
+    alias?: string | null;
+    id: string;
+    name: string;
+  }>;
+  title: string;
+};
 
 function SubjectCard({
   count,
@@ -128,14 +140,63 @@ function SubjectCard({
         </div>
       </CardContent>
     </Card>
-  )
+  );
+}
+
+function PeopleTabContent() {
+  const [{ data: people }] = useSuspenseQueries({
+    queries: [getPeopleQueryOptions()],
+  });
+
+  return (
+    <TabsContent value="people" className="space-y-6">
+      <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
+        <div className="space-y-1">
+          <h2 className="text-lg font-semibold">人员主数据</h2>
+          <p className="text-sm text-muted-foreground">
+            维护内部成员、客户联系人与外部顾问等人员信息。
+          </p>
+        </div>
+        <AddPerson />
+      </div>
+
+      {people.data.length === 0 ? (
+        <div className="flex flex-col items-center justify-center rounded-xl border border-dashed px-6 py-12 text-center">
+          <div className="mb-4 rounded-full bg-muted p-4">
+            <Users className="size-8 text-muted-foreground" />
+          </div>
+          <h3 className="text-lg font-semibold">暂无人员主数据</h3>
+          <p className="text-sm text-muted-foreground">
+            点击右上角“新增人员”开始维护人员主体信息。
+          </p>
+        </div>
+      ) : (
+        <DataTable columns={columns} data={people.data} />
+      )}
+    </TabsContent>
+  );
+}
+
+function OrganizationsTabContent() {
+  const [{ data: organizations }] = useSuspenseQueries({
+    queries: [getOrganizationsQueryOptions()],
+  });
+
+  return (
+    <TabsContent value="organizations">
+      <SubjectCard
+        count={organizations.count}
+        description="用于维护机构、载体与服务方等组织主数据。"
+        emptyCopy="暂无机构主数据。当前页签仅保留工作区外壳，后续任务会补充完整维护流程。"
+        icon={Building2}
+        items={organizations.data}
+        title="机构主数据"
+      />
+    </TabsContent>
+  );
 }
 
 function SubjectsShellContent() {
-  const [{ data: people }, { data: organizations }] = useSuspenseQueries({
-    queries: [getPeopleQueryOptions(), getOrganizationsQueryOptions()],
-  })
-
   return (
     <Tabs defaultValue="people" className="gap-6">
       <TabsList className="w-full justify-start sm:w-auto">
@@ -143,29 +204,10 @@ function SubjectsShellContent() {
         <TabsTrigger value="organizations">机构</TabsTrigger>
       </TabsList>
 
-      <TabsContent value="people">
-        <SubjectCard
-          count={people.count}
-          description="用于维护内部成员、客户联系人与外部顾问等人员主数据。"
-          emptyCopy="暂无人员主数据。后续任务会在此补充完整维护表格与编辑流程。"
-          icon={Users}
-          items={people.data}
-          title="人员主数据"
-        />
-      </TabsContent>
-
-      <TabsContent value="organizations">
-        <SubjectCard
-          count={organizations.count}
-          description="用于维护机构、载体与服务方等组织主数据。"
-          emptyCopy="暂无机构主数据。后续任务会在此补充完整维护表格与编辑流程。"
-          icon={Building2}
-          items={organizations.data}
-          title="机构主数据"
-        />
-      </TabsContent>
+      <PeopleTabContent />
+      <OrganizationsTabContent />
     </Tabs>
-  )
+  );
 }
 
 function Subjects() {
@@ -181,9 +223,7 @@ function Subjects() {
       <div className="rounded-lg border bg-muted/20 px-4 py-3 text-sm text-muted-foreground">
         <div className="flex items-start gap-3">
           <AlertCircle className="mt-0.5 size-4 shrink-0" />
-          <p>
-            当前交付为受保护的工作区外壳，已接入人员与机构服务用于预加载概览数据。
-          </p>
+          <p>当前已交付人员 CRUD 流程，机构页签暂保留为工作区外壳。</p>
         </div>
       </div>
 
@@ -191,5 +231,5 @@ function Subjects() {
         <SubjectsShellContent />
       </Suspense>
     </div>
-  )
+  );
 }
