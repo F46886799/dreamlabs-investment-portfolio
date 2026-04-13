@@ -1,12 +1,15 @@
 from datetime import datetime, timezone
 from uuid import UUID
 
+from fastapi import HTTPException
 from sqlmodel import Session, select
 
 from app.models import (
+    Account,
     AuditEvent,
     NormalizationConflict,
     NormalizedPosition,
+    Portfolio,
     RawPosition,
     UnifiedPosition,
 )
@@ -134,26 +137,59 @@ def ingest_positions(
     return snapshot_version, synced_records, normalized_records, conflict_records
 
 
+def resolve_portfolio_scope(
+    session: Session,
+    owner_id: UUID,
+    account_id: UUID | None = None,
+    portfolio_id: UUID | None = None,
+) -> UUID | None:
+    if account_id is not None:
+        account = session.get(Account, account_id)
+        if not account or account.owner_id != owner_id:
+            raise HTTPException(status_code=404, detail="Account not found")
+
+    if portfolio_id is None:
+        return account_id
+
+    portfolio = session.get(Portfolio, portfolio_id)
+    if not portfolio or portfolio.owner_id != owner_id:
+        raise HTTPException(status_code=404, detail="Portfolio not found")
+
+    return portfolio.account_id
+
+
 def get_unified_positions(
     session: Session,
     owner_id: UUID,
+    account_id: UUID | None = None,
+    portfolio_id: UUID | None = None,
 ) -> tuple[str, bool, list[UnifiedPosition]]:
-    latest = session.exec(
+    scoped_account_id = resolve_portfolio_scope(
+        session=session,
+        owner_id=owner_id,
+        account_id=account_id,
+        portfolio_id=portfolio_id,
+    )
+    statement = (
         select(NormalizedPosition)
-        .where(NormalizedPosition.owner_id == owner_id)
-        .order_by(NormalizedPosition.created_at.desc())
-    ).all()
+        .join(RawPosition, RawPosition.id == NormalizedPosition.raw_position_id)
+        .where(
+            NormalizedPosition.owner_id == owner_id,
+            NormalizedPosition.normalization_status == "normalized",
+            RawPosition.owner_id == owner_id,
+        )
+    )
+    if scoped_account_id is not None:
+        statement = statement.where(RawPosition.account_id == scoped_account_id)
+
+    latest = session.exec(statement.order_by(NormalizedPosition.created_at.desc())).all()
 
     if not latest:
         return "", True, []
 
     snapshot_version = latest[0].snapshot_version
     rows = session.exec(
-        select(NormalizedPosition).where(
-            NormalizedPosition.owner_id == owner_id,
-            NormalizedPosition.snapshot_version == snapshot_version,
-            NormalizedPosition.normalization_status == "normalized",
-        )
+        statement.where(NormalizedPosition.snapshot_version == snapshot_version)
     ).all()
 
     grouped: dict[tuple[str, str], UnifiedPosition] = {}
@@ -172,12 +208,30 @@ def get_unified_positions(
     return snapshot_version, False, list(grouped.values())
 
 
-def get_anomaly_count(session: Session, owner_id: UUID) -> int:
+def get_anomaly_count(
+    session: Session,
+    owner_id: UUID,
+    account_id: UUID | None = None,
+    portfolio_id: UUID | None = None,
+) -> int:
+    scoped_account_id = resolve_portfolio_scope(
+        session=session,
+        owner_id=owner_id,
+        account_id=account_id,
+        portfolio_id=portfolio_id,
+    )
+    statement = (
+        select(NormalizationConflict)
+        .join(RawPosition, RawPosition.id == NormalizationConflict.raw_position_id)
+        .where(
+            NormalizationConflict.owner_id == owner_id,
+            NormalizationConflict.status == "pending",
+            RawPosition.owner_id == owner_id,
+        )
+    )
+    if scoped_account_id is not None:
+        statement = statement.where(RawPosition.account_id == scoped_account_id)
+
     return len(
-        session.exec(
-            select(NormalizationConflict).where(
-                NormalizationConflict.owner_id == owner_id,
-                NormalizationConflict.status == "pending",
-            )
-        ).all()
+        session.exec(statement).all()
     )

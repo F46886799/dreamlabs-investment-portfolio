@@ -1,7 +1,8 @@
 from datetime import datetime, timezone
+from typing import Annotated
 from uuid import UUID
 
-from fastapi import APIRouter, HTTPException
+from fastapi import APIRouter, Depends, HTTPException
 from sqlmodel import select
 
 from app.api.deps import CurrentUser, SessionDep
@@ -12,6 +13,7 @@ from app.models import (
     AuditEventsPublic,
     ConnectorSyncResponse,
     HealthReportResponse,
+    PortfolioAggregationFilters,
     UnifiedPortfolioResponse,
 )
 from app.services.portfolio_pipeline import (
@@ -32,6 +34,17 @@ def _get_owned_account(
     if not account or account.owner_id != current_user.id:
         raise HTTPException(status_code=404, detail="Account not found")
     return account
+
+
+def _get_aggregation_filters(
+    filters: Annotated[PortfolioAggregationFilters, Depends()],
+) -> PortfolioAggregationFilters:
+    if filters.account_id is not None and filters.portfolio_id is not None:
+        raise HTTPException(
+            status_code=409,
+            detail="account_id and portfolio_id cannot be combined",
+        )
+    return filters
 
 
 @connectors_router.post("/{source}/sync", response_model=ConnectorSyncResponse)
@@ -62,10 +75,13 @@ def sync_connector_positions(
 def get_unified_portfolio(
     session: SessionDep,
     current_user: CurrentUser,
+    filters: Annotated[PortfolioAggregationFilters, Depends(_get_aggregation_filters)],
 ) -> UnifiedPortfolioResponse:
     snapshot_version, is_stale, positions = get_unified_positions(
         session=session,
         owner_id=current_user.id,
+        account_id=filters.account_id,
+        portfolio_id=filters.portfolio_id,
     )
 
     return UnifiedPortfolioResponse(
@@ -79,9 +95,20 @@ def get_unified_portfolio(
 def get_health_report(
     session: SessionDep,
     current_user: CurrentUser,
+    filters: Annotated[PortfolioAggregationFilters, Depends(_get_aggregation_filters)],
 ) -> HealthReportResponse:
-    _, is_stale, positions = get_unified_positions(session=session, owner_id=current_user.id)
-    anomaly_count = get_anomaly_count(session=session, owner_id=current_user.id)
+    _, is_stale, positions = get_unified_positions(
+        session=session,
+        owner_id=current_user.id,
+        account_id=filters.account_id,
+        portfolio_id=filters.portfolio_id,
+    )
+    anomaly_count = get_anomaly_count(
+        session=session,
+        owner_id=current_user.id,
+        account_id=filters.account_id,
+        portfolio_id=filters.portfolio_id,
+    )
 
     return HealthReportResponse(
         week=datetime.now(timezone.utc).strftime("%Y-W%W"),

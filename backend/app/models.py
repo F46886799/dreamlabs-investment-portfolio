@@ -299,6 +299,11 @@ class UnifiedPosition(SQLModel):
     market_value_usd: float
 
 
+class PortfolioAggregationFilters(SQLModel):
+    account_id: uuid.UUID | None = None
+    portfolio_id: uuid.UUID | None = None
+
+
 class UnifiedPortfolioResponse(SQLModel):
     snapshot_version: str
     stale: bool
