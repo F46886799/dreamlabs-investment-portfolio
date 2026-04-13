@@ -157,6 +157,54 @@ class PeoplePublic(SQLModel):
     count: int
 
 
+class OrganizationType(str, enum.Enum):
+    fund_or_investment_vehicle = "fund_or_investment_vehicle"
+    broker_or_bank = "broker_or_bank"
+    service_provider = "service_provider"
+    other = "other"
+
+
+class OrganizationBase(SQLModel):
+    organization_type: OrganizationType
+    name: str = Field(min_length=1, max_length=255)
+    alias: str | None = Field(default=None, max_length=255)
+    notes: str | None = Field(default=None, max_length=1000)
+
+
+class OrganizationCreate(OrganizationBase):
+    pass
+
+
+class OrganizationUpdate(SQLModel):
+    organization_type: OrganizationType | None = None
+    name: str | None = Field(default=None, min_length=1, max_length=255)
+    alias: str | None = Field(default=None, max_length=255)
+    notes: str | None = Field(default=None, max_length=1000)
+
+
+class Organization(OrganizationBase, table=True):
+    id: uuid.UUID = Field(default_factory=uuid.uuid4, primary_key=True)
+    created_at: datetime | None = Field(
+        default_factory=get_datetime_utc,
+        sa_type=DateTime(timezone=True),  # type: ignore
+    )
+    updated_at: datetime | None = Field(
+        default_factory=get_datetime_utc,
+        sa_type=DateTime(timezone=True),  # type: ignore
+    )
+
+
+class OrganizationPublic(OrganizationBase):
+    id: uuid.UUID
+    created_at: datetime | None = None
+    updated_at: datetime | None = None
+
+
+class OrganizationsPublic(SQLModel):
+    data: list[OrganizationPublic]
+    count: int
+
+
 class ConnectorSyncResponse(SQLModel):
     source: str
     status: str
