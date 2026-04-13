@@ -1,9 +1,32 @@
 import uuid
 from datetime import datetime, timezone
 
-from pydantic import EmailStr
-from sqlalchemy import DateTime, Index, text
+from pydantic import EmailStr, field_validator
+from sqlalchemy import DateTime, Index, event, text
 from sqlmodel import Field, Relationship, SQLModel
+
+
+ALLOWED_ASSET_TYPES = {"stock", "etf", "crypto", "bond", "cash"}
+
+
+def normalize_asset_type_value(value: str) -> str:
+    normalized = value.strip().lower()
+    if normalized not in ALLOWED_ASSET_TYPES:
+        raise ValueError(
+            "asset_type must be one of: stock, etf, crypto, bond, cash"
+        )
+    return normalized
+
+
+def normalize_symbol_value(value: str) -> str:
+    return value.strip().upper()
+
+
+def normalize_market_value(value: str | None) -> str | None:
+    if value is None:
+        return None
+    normalized = value.strip().upper()
+    return normalized or None
 
 
 def get_datetime_utc() -> datetime:
@@ -256,6 +279,21 @@ class AssetInstrumentBase(SQLModel):
     external_id: str | None = Field(default=None, max_length=128)
     is_active: bool = True
 
+    @field_validator("asset_type")
+    @classmethod
+    def validate_asset_type(cls, value: str) -> str:
+        return normalize_asset_type_value(value)
+
+    @field_validator("symbol")
+    @classmethod
+    def normalize_symbol(cls, value: str) -> str:
+        return normalize_symbol_value(value)
+
+    @field_validator("exchange", "market")
+    @classmethod
+    def normalize_market_fields(cls, value: str | None) -> str | None:
+        return normalize_market_value(value)
+
 
 class AssetInstrumentCreate(AssetInstrumentBase):
     pass
@@ -284,9 +322,9 @@ class AssetInstrument(AssetInstrumentBase, table=True):
         Index(
             "uq_assetinstrument_type_symbol_exchange_market",
             "asset_type",
-            "symbol",
-            text("coalesce(exchange, '')"),
-            text("coalesce(market, '')"),
+            text("lower(symbol)"),
+            text("coalesce(lower(exchange), '')"),
+            text("coalesce(lower(market), '')"),
             unique=True,
         ),
     )
@@ -305,7 +343,6 @@ class AssetInstrument(AssetInstrumentBase, table=True):
         sa_type=DateTime(timezone=True),  # type: ignore
     )
 
-
 class AssetInstrumentPublic(AssetInstrumentBase):
     id: uuid.UUID
     created_at: datetime
@@ -316,3 +353,15 @@ class AssetInstrumentPublic(AssetInstrumentBase):
 class AssetInstrumentsPublic(SQLModel):
     data: list[AssetInstrumentPublic]
     count: int
+
+
+@event.listens_for(AssetInstrument, "before_insert")
+@event.listens_for(AssetInstrument, "before_update")
+def normalize_asset_instrument_before_persist(
+    mapper: object, connection: object, target: AssetInstrument
+) -> None:
+    del mapper, connection
+    target.asset_type = normalize_asset_type_value(target.asset_type)
+    target.symbol = normalize_symbol_value(target.symbol)
+    target.exchange = normalize_market_value(target.exchange)
+    target.market = normalize_market_value(target.market)

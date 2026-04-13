@@ -26,9 +26,9 @@ def upgrade() -> None:
         "assetinstrument",
         [
             "asset_type",
-            "symbol",
-            sa.text("coalesce(exchange, '')"),
-            sa.text("coalesce(market, '')"),
+            sa.text("lower(symbol)"),
+            sa.text("coalesce(lower(exchange), '')"),
+            sa.text("coalesce(lower(market), '')"),
         ],
         unique=True,
     )
