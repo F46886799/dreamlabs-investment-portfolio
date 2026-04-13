@@ -34,8 +34,12 @@ def test_create_and_list_accounts(
 
     assert list_response.status_code == 200
     listed = list_response.json()
-    assert listed["count"] == 1
-    assert listed["data"][0]["institution_name"] == "Interactive Brokers"
+    assert listed["count"] >= 1
+    matching_accounts = [
+        account for account in listed["data"] if account["id"] == created["id"]
+    ]
+    assert len(matching_accounts) == 1
+    assert matching_accounts[0]["institution_name"] == payload["institution_name"]
 
 
 def test_list_accounts_filters_by_owner_and_active_state(
@@ -102,3 +106,23 @@ def test_list_accounts_filters_by_owner_and_active_state(
     assert active_payload["name"] in listed_with_inactive_names
     assert inactive_payload["name"] in listed_with_inactive_names
     assert other_user_payload["name"] not in listed_with_inactive_names
+
+
+def test_create_account_rejects_invalid_account_type(
+    client: TestClient, superuser_token_headers: dict[str, str]
+) -> None:
+    payload = {
+        "name": "Invalid Account Type",
+        "account_type": "crypto",
+        "institution_name": "Validation Broker",
+        "base_currency": "USD",
+        "is_active": True,
+    }
+
+    response = client.post(
+        f"{settings.API_V1_STR}/accounts",
+        headers=superuser_token_headers,
+        json=payload,
+    )
+
+    assert response.status_code == 422
