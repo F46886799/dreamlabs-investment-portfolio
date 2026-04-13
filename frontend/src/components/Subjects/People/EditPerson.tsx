@@ -63,7 +63,6 @@ const formSchema = z.object({
 type FormData = z.infer<typeof formSchema>;
 
 interface EditPersonProps {
-  onMenuClose: () => void;
   onSuccess: () => void;
   person: PersonPublic;
 }
@@ -73,7 +72,7 @@ const normalizeOptionalText = (value: string) => {
   return trimmed.length > 0 ? trimmed : null;
 };
 
-const EditPerson = ({ onMenuClose, onSuccess, person }: EditPersonProps) => {
+const EditPerson = ({ onSuccess, person }: EditPersonProps) => {
   const [isOpen, setIsOpen] = useState(false);
   const queryClient = useQueryClient();
   const { showSuccessToast, showErrorToast } = useCustomToast();
@@ -129,7 +128,6 @@ const EditPerson = ({ onMenuClose, onSuccess, person }: EditPersonProps) => {
 
     if (!open) {
       form.reset(formValues);
-      onMenuClose();
     }
   };
 
@@ -140,7 +138,6 @@ const EditPerson = ({ onMenuClose, onSuccess, person }: EditPersonProps) => {
         onClick={() => {
           form.reset(formValues);
           setIsOpen(true);
-          onMenuClose();
         }}
       >
         <Pencil />

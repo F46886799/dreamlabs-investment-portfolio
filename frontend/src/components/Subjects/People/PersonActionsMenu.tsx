@@ -27,16 +27,8 @@ const PersonActionsMenu = ({ person }: PersonActionsMenuProps) => {
         </Button>
       </DropdownMenuTrigger>
       <DropdownMenuContent align="end">
-        <EditPerson
-          person={person}
-          onMenuClose={() => setOpen(false)}
-          onSuccess={() => setOpen(false)}
-        />
-        <DeletePerson
-          person={person}
-          onMenuClose={() => setOpen(false)}
-          onSuccess={() => setOpen(false)}
-        />
+        <EditPerson person={person} onSuccess={() => setOpen(false)} />
+        <DeletePerson person={person} onSuccess={() => setOpen(false)} />
       </DropdownMenuContent>
     </DropdownMenu>
   );

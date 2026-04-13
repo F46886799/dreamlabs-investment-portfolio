@@ -21,13 +21,11 @@ import useCustomToast from "@/hooks/useCustomToast";
 import { handleError } from "@/utils";
 
 interface DeletePersonProps {
-  onMenuClose: () => void;
   onSuccess: () => void;
   person: PersonPublic;
 }
 
 const DeletePerson = ({
-  onMenuClose,
   onSuccess,
   person,
 }: DeletePersonProps) => {
@@ -58,18 +56,12 @@ const DeletePerson = ({
       open={isOpen}
       onOpenChange={(open) => {
         setIsOpen(open);
-        if (!open) {
-          onMenuClose();
-        }
       }}
     >
       <DropdownMenuItem
         variant="destructive"
         onSelect={(event) => event.preventDefault()}
-        onClick={() => {
-          setIsOpen(true);
-          onMenuClose();
-        }}
+        onClick={() => setIsOpen(true)}
       >
         <Trash2 />
         删除人员
