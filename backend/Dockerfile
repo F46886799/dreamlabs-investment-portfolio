@@ -1,4 +1,4 @@
-FROM python:3.10
+FROM docker.m.daocloud.io/library/python:3.10
 
 ENV PYTHONUNBUFFERED=1
 
@@ -13,6 +13,8 @@ ENV UV_COMPILE_BYTECODE=1
 # uv Cache
 # Ref: https://docs.astral.sh/uv/guides/integration/docker/#caching
 ENV UV_LINK_MODE=copy
+ENV UV_INDEX_URL=https://pypi.tuna.tsinghua.edu.cn/simple
+ENV UV_HTTP_TIMEOUT=600
 
 WORKDIR /app/
 

@@ -3,7 +3,7 @@
 import type { CancelablePromise } from './core/CancelablePromise';
 import { OpenAPI } from './core/OpenAPI';
 import { request as __request } from './core/request';
-import type { ItemsReadItemsData, ItemsReadItemsResponse, ItemsCreateItemData, ItemsCreateItemResponse, ItemsReadItemData, ItemsReadItemResponse, ItemsUpdateItemData, ItemsUpdateItemResponse, ItemsDeleteItemData, ItemsDeleteItemResponse, LoginLoginAccessTokenData, LoginLoginAccessTokenResponse, LoginTestTokenResponse, LoginRecoverPasswordData, LoginRecoverPasswordResponse, LoginResetPasswordData, LoginResetPasswordResponse, LoginRecoverPasswordHtmlContentData, LoginRecoverPasswordHtmlContentResponse, PrivateCreateUserData, PrivateCreateUserResponse, UsersReadUsersData, UsersReadUsersResponse, UsersCreateUserData, UsersCreateUserResponse, UsersReadUserMeResponse, UsersDeleteUserMeResponse, UsersUpdateUserMeData, UsersUpdateUserMeResponse, UsersUpdatePasswordMeData, UsersUpdatePasswordMeResponse, UsersRegisterUserData, UsersRegisterUserResponse, UsersReadUserByIdData, UsersReadUserByIdResponse, UsersUpdateUserData, UsersUpdateUserResponse, UsersDeleteUserData, UsersDeleteUserResponse, UtilsTestEmailData, UtilsTestEmailResponse, UtilsHealthCheckResponse } from './types.gen';
+import type { ItemsReadItemsData, ItemsReadItemsResponse, ItemsCreateItemData, ItemsCreateItemResponse, ItemsReadItemData, ItemsReadItemResponse, ItemsUpdateItemData, ItemsUpdateItemResponse, ItemsDeleteItemData, ItemsDeleteItemResponse, LoginLoginAccessTokenData, LoginLoginAccessTokenResponse, LoginTestTokenResponse, LoginRecoverPasswordData, LoginRecoverPasswordResponse, LoginResetPasswordData, LoginResetPasswordResponse, LoginRecoverPasswordHtmlContentData, LoginRecoverPasswordHtmlContentResponse, PortfolioSyncConnectorPositionsData, PortfolioSyncConnectorPositionsResponse, PortfolioGetUnifiedPortfolioResponse, PortfolioGetHealthReportResponse, PortfolioGetAuditEventsResponse, PrivateCreateUserData, PrivateCreateUserResponse, UsersReadUsersData, UsersReadUsersResponse, UsersCreateUserData, UsersCreateUserResponse, UsersReadUserMeResponse, UsersDeleteUserMeResponse, UsersUpdateUserMeData, UsersUpdateUserMeResponse, UsersUpdatePasswordMeData, UsersUpdatePasswordMeResponse, UsersRegisterUserData, UsersRegisterUserResponse, UsersReadUserByIdData, UsersReadUserByIdResponse, UsersUpdateUserData, UsersUpdateUserResponse, UsersDeleteUserData, UsersDeleteUserResponse, UtilsTestEmailData, UtilsTestEmailResponse, UtilsHealthCheckResponse } from './types.gen';
 
 export class ItemsService {
     /**
@@ -209,6 +209,64 @@ export class LoginService {
             errors: {
                 422: 'Validation Error'
             }
+        });
+    }
+}
+
+export class PortfolioService {
+    /**
+     * Sync Connector Positions
+     * @param data The data for the request.
+     * @param data.source
+     * @returns ConnectorSyncResponse Successful Response
+     * @throws ApiError
+     */
+    public static syncConnectorPositions(data: PortfolioSyncConnectorPositionsData): CancelablePromise<PortfolioSyncConnectorPositionsResponse> {
+        return __request(OpenAPI, {
+            method: 'POST',
+            url: '/api/v1/connectors/{source}/sync',
+            path: {
+                source: data.source
+            },
+            errors: {
+                422: 'Validation Error'
+            }
+        });
+    }
+    
+    /**
+     * Get Unified Portfolio
+     * @returns UnifiedPortfolioResponse Successful Response
+     * @throws ApiError
+     */
+    public static getUnifiedPortfolio(): CancelablePromise<PortfolioGetUnifiedPortfolioResponse> {
+        return __request(OpenAPI, {
+            method: 'GET',
+            url: '/api/v1/portfolio/unified'
+        });
+    }
+    
+    /**
+     * Get Health Report
+     * @returns HealthReportResponse Successful Response
+     * @throws ApiError
+     */
+    public static getHealthReport(): CancelablePromise<PortfolioGetHealthReportResponse> {
+        return __request(OpenAPI, {
+            method: 'GET',
+            url: '/api/v1/portfolio/health-report'
+        });
+    }
+    
+    /**
+     * Get Audit Events
+     * @returns AuditEventsPublic Successful Response
+     * @throws ApiError
+     */
+    public static getAuditEvents(): CancelablePromise<PortfolioGetAuditEventsResponse> {
+        return __request(OpenAPI, {
+            method: 'GET',
+            url: '/api/v1/audit/events'
         });
     }
 }
