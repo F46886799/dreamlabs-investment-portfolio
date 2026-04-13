@@ -80,6 +80,68 @@ export type NewPassword = {
     new_password: string;
 };
 
+export type OrganizationCreate = {
+    organization_type: OrganizationType;
+    name: string;
+    alias?: (string | null);
+    notes?: (string | null);
+};
+
+export type OrganizationPublic = {
+    organization_type: OrganizationType;
+    name: string;
+    alias?: (string | null);
+    notes?: (string | null);
+    id: string;
+    created_at: string;
+    updated_at: string;
+};
+
+export type OrganizationsPublic = {
+    data: Array<OrganizationPublic>;
+    count: number;
+};
+
+export type OrganizationType = 'fund_or_investment_vehicle' | 'broker_or_bank' | 'service_provider' | 'other';
+
+export type OrganizationUpdate = {
+    organization_type?: (OrganizationType | null);
+    name?: (string | null);
+    alias?: (string | null);
+    notes?: (string | null);
+};
+
+export type PeoplePublic = {
+    data: Array<PersonPublic>;
+    count: number;
+};
+
+export type PersonCreate = {
+    person_type: PersonType;
+    name: string;
+    alias?: (string | null);
+    notes?: (string | null);
+};
+
+export type PersonPublic = {
+    person_type: PersonType;
+    name: string;
+    alias?: (string | null);
+    notes?: (string | null);
+    id: string;
+    created_at?: (string | null);
+    updated_at?: (string | null);
+};
+
+export type PersonType = 'internal_member' | 'client_contact' | 'external_advisor' | 'other';
+
+export type PersonUpdate = {
+    person_type?: (PersonType | null);
+    name?: (string | null);
+    alias?: (string | null);
+    notes?: (string | null);
+};
+
 export type PrivateUserCreate = {
     email: string;
     password: string;
@@ -218,6 +280,70 @@ export type LoginRecoverPasswordHtmlContentData = {
 };
 
 export type LoginRecoverPasswordHtmlContentResponse = (string);
+
+export type OrganizationsReadOrganizationsData = {
+    limit?: number;
+    skip?: number;
+};
+
+export type OrganizationsReadOrganizationsResponse = (OrganizationsPublic);
+
+export type OrganizationsCreateOrganizationData = {
+    requestBody: OrganizationCreate;
+};
+
+export type OrganizationsCreateOrganizationResponse = (OrganizationPublic);
+
+export type OrganizationsReadOrganizationData = {
+    organizationId: string;
+};
+
+export type OrganizationsReadOrganizationResponse = (OrganizationPublic);
+
+export type OrganizationsUpdateOrganizationData = {
+    organizationId: string;
+    requestBody: OrganizationUpdate;
+};
+
+export type OrganizationsUpdateOrganizationResponse = (OrganizationPublic);
+
+export type OrganizationsDeleteOrganizationData = {
+    organizationId: string;
+};
+
+export type OrganizationsDeleteOrganizationResponse = (Message);
+
+export type PeopleReadPeopleData = {
+    limit?: number;
+    skip?: number;
+};
+
+export type PeopleReadPeopleResponse = (PeoplePublic);
+
+export type PeopleCreatePersonData = {
+    requestBody: PersonCreate;
+};
+
+export type PeopleCreatePersonResponse = (PersonPublic);
+
+export type PeopleReadPersonData = {
+    personId: string;
+};
+
+export type PeopleReadPersonResponse = (PersonPublic);
+
+export type PeopleUpdatePersonData = {
+    personId: string;
+    requestBody: PersonUpdate;
+};
+
+export type PeopleUpdatePersonResponse = (PersonPublic);
+
+export type PeopleDeletePersonData = {
+    personId: string;
+};
+
+export type PeopleDeletePersonResponse = (Message);
 
 export type PortfolioSyncConnectorPositionsData = {
     source: string;
