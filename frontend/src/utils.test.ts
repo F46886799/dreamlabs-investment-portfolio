@@ -1,6 +1,7 @@
 import { AxiosError } from "axios"
 import { describe, expect, test } from "bun:test"
 import { ApiError } from "./client/core/ApiError"
+import type { ApiRequestOptions } from "./client/core/ApiRequestOptions"
 import { getInitials, handleError } from "./utils"
 
 describe("getInitials", () => {
@@ -20,7 +21,17 @@ describe("handleError", () => {
       received = msg
     }
     const apiError = new ApiError(
-      { method: "GET", url: "/test", path: "/test" } as any,
+      {
+        method: "GET",
+        url: "/test",
+        path: "/test",
+        body: undefined,
+        query: undefined,
+        formData: undefined,
+        mediaType: undefined,
+        responseHeader: undefined,
+        errors: undefined,
+      } satisfies ApiRequestOptions,
       {
         url: "/test",
         ok: false,
@@ -42,7 +53,7 @@ describe("handleError", () => {
     }
     const axiosError = new AxiosError("Network Error")
 
-    handleError.call(showError, axiosError as any)
+    handleError.call(showError, axiosError as unknown as ApiError)
     expect(received).toBe("Network Error")
   })
 })
