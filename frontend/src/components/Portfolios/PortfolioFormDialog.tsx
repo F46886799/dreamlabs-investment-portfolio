@@ -150,6 +150,11 @@ export function PortfolioFormDialog({
       updatePayload.is_active = data.is_active
     }
 
+    if (Object.keys(updatePayload).length === 0) {
+      setIsOpen(false)
+      return
+    }
+
     updateMutation.mutate({
       portfolioId: portfolio.id,
       requestBody: updatePayload,
@@ -255,7 +260,10 @@ export function PortfolioFormDialog({
               <LoadingButton
                 type="submit"
                 loading={mutation.isPending}
-                disabled={mode === "create" && selectableAccounts.length === 0}
+                disabled={
+                  (mode === "create" && selectableAccounts.length === 0) ||
+                  (mode === "edit" && !form.formState.isDirty)
+                }
               >
                 保存
               </LoadingButton>

@@ -279,3 +279,59 @@ def test_update_portfolio_supports_edit_and_toggle(
     ]
     assert len(matching_portfolios) == 1
     assert matching_portfolios[0]["is_active"] is False
+
+
+def test_update_portfolio_rejects_inactive_account_reassignment(
+    client: TestClient, superuser_token_headers: dict[str, str]
+) -> None:
+    active_account_id = _create_account(
+        client,
+        superuser_token_headers,
+        name="活跃账户",
+    )["id"]
+    inactive_account_id = _create_account(
+        client,
+        superuser_token_headers,
+        name="停用账户",
+        is_active=False,
+    )["id"]
+
+    create_response = client.post(
+        f"{settings.API_V1_STR}/portfolios",
+        headers=superuser_token_headers,
+        json={
+            "name": "待迁移组合",
+            "account_id": active_account_id,
+            "description": "保持原账户归属",
+            "is_active": True,
+        },
+    )
+
+    assert create_response.status_code == 200
+    created = create_response.json()
+
+    update_response = client.put(
+        f"{settings.API_V1_STR}/portfolios/{created['id']}",
+        headers=superuser_token_headers,
+        json={"account_id": inactive_account_id},
+    )
+
+    assert update_response.status_code == 409
+    assert (
+        update_response.json()["detail"]
+        == "Cannot assign portfolio to inactive account"
+    )
+
+    read_response = client.get(
+        f"{settings.API_V1_STR}/portfolios?account_id={active_account_id}",
+        headers=superuser_token_headers,
+    )
+
+    assert read_response.status_code == 200
+    matching_portfolios = [
+        portfolio
+        for portfolio in read_response.json()["data"]
+        if portfolio["id"] == created["id"]
+    ]
+    assert len(matching_portfolios) == 1
+    assert matching_portfolios[0]["account_id"] == active_account_id

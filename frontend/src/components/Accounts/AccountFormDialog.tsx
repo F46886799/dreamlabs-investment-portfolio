@@ -152,6 +152,11 @@ export function AccountFormDialog({
       updatePayload.is_active = data.is_active
     }
 
+    if (Object.keys(updatePayload).length === 0) {
+      setIsOpen(false)
+      return
+    }
+
     updateMutation.mutate({
       accountId: account.id,
       requestBody: updatePayload,
@@ -295,7 +300,11 @@ export function AccountFormDialog({
                   取消
                 </Button>
               </DialogClose>
-              <LoadingButton type="submit" loading={mutation.isPending}>
+              <LoadingButton
+                type="submit"
+                loading={mutation.isPending}
+                disabled={mode === "edit" && !form.formState.isDirty}
+              >
                 保存
               </LoadingButton>
             </DialogFooter>

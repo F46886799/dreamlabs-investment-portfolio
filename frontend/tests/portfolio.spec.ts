@@ -374,6 +374,9 @@ test.describe("Portfolio pages", () => {
     await expect
       .poll(() => portfolioQueries.length > initialQueryCount)
       .toBe(true)
+    await expect
+      .poll(() => portfolioQueries.at(-1) ?? "")
+      .not.toContain("include_inactive=true")
 
     const toggleQueryCount = portfolioQueries.length
     await page.getByLabel("账户筛选").click()
