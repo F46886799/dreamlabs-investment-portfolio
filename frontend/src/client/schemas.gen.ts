@@ -142,6 +142,96 @@ export const AccountTypeSchema = {
     title: 'AccountType'
 } as const;
 
+export const AccountUpdateSchema = {
+    properties: {
+        name: {
+            anyOf: [
+                {
+                    type: 'string',
+                    maxLength: 255,
+                    minLength: 1
+                },
+                {
+                    type: 'null'
+                }
+            ],
+            title: 'Name'
+        },
+        account_type: {
+            anyOf: [
+                {
+                    '$ref': '#/components/schemas/AccountType'
+                },
+                {
+                    type: 'null'
+                }
+            ]
+        },
+        institution_name: {
+            anyOf: [
+                {
+                    type: 'string',
+                    maxLength: 255,
+                    minLength: 1
+                },
+                {
+                    type: 'null'
+                }
+            ],
+            title: 'Institution Name'
+        },
+        account_mask: {
+            anyOf: [
+                {
+                    type: 'string',
+                    maxLength: 32
+                },
+                {
+                    type: 'null'
+                }
+            ],
+            title: 'Account Mask'
+        },
+        base_currency: {
+            anyOf: [
+                {
+                    type: 'string',
+                    maxLength: 8
+                },
+                {
+                    type: 'null'
+                }
+            ],
+            title: 'Base Currency'
+        },
+        notes: {
+            anyOf: [
+                {
+                    type: 'string',
+                    maxLength: 1000
+                },
+                {
+                    type: 'null'
+                }
+            ],
+            title: 'Notes'
+        },
+        is_active: {
+            anyOf: [
+                {
+                    type: 'boolean'
+                },
+                {
+                    type: 'null'
+                }
+            ],
+            title: 'Is Active'
+        }
+    },
+    type: 'object',
+    title: 'AccountUpdate'
+} as const;
+
 export const AccountsPublicSchema = {
     properties: {
         data: {
@@ -630,6 +720,61 @@ export const PortfolioPublicSchema = {
     type: 'object',
     required: ['name', 'account_id', 'id', 'owner_id', 'created_at', 'updated_at'],
     title: 'PortfolioPublic'
+} as const;
+
+export const PortfolioUpdateSchema = {
+    properties: {
+        name: {
+            anyOf: [
+                {
+                    type: 'string',
+                    maxLength: 255,
+                    minLength: 1
+                },
+                {
+                    type: 'null'
+                }
+            ],
+            title: 'Name'
+        },
+        account_id: {
+            anyOf: [
+                {
+                    type: 'string',
+                    format: 'uuid'
+                },
+                {
+                    type: 'null'
+                }
+            ],
+            title: 'Account Id'
+        },
+        description: {
+            anyOf: [
+                {
+                    type: 'string',
+                    maxLength: 1000
+                },
+                {
+                    type: 'null'
+                }
+            ],
+            title: 'Description'
+        },
+        is_active: {
+            anyOf: [
+                {
+                    type: 'boolean'
+                },
+                {
+                    type: 'null'
+                }
+            ],
+            title: 'Is Active'
+        }
+    },
+    type: 'object',
+    title: 'PortfolioUpdate'
 } as const;
 
 export const PortfoliosPublicSchema = {

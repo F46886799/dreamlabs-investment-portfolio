@@ -10,6 +10,8 @@ from app.models import (
     PortfolioCreate,
     PortfolioPublic,
     PortfoliosPublic,
+    PortfolioUpdate,
+    get_datetime_utc,
 )
 
 router = APIRouter(prefix="/portfolios", tags=["portfolios"])
@@ -22,6 +24,15 @@ def _get_owned_account(
     if not account or account.owner_id != current_user.id:
         raise HTTPException(status_code=404, detail="Account not found")
     return account
+
+
+def _get_owned_portfolio(
+    session: SessionDep, current_user: CurrentUser, portfolio_id: uuid.UUID
+) -> Portfolio:
+    portfolio = session.get(Portfolio, portfolio_id)
+    if not portfolio or portfolio.owner_id != current_user.id:
+        raise HTTPException(status_code=404, detail="Portfolio not found")
+    return portfolio
 
 
 @router.post("", response_model=PortfolioPublic)
@@ -44,13 +55,42 @@ def create_portfolio(
     return PortfolioPublic.model_validate(portfolio)
 
 
+@router.put("/{portfolio_id}", response_model=PortfolioPublic)
+def update_portfolio(
+    session: SessionDep,
+    current_user: CurrentUser,
+    portfolio_id: uuid.UUID,
+    portfolio_in: PortfolioUpdate,
+) -> PortfolioPublic:
+    portfolio = _get_owned_portfolio(session, current_user, portfolio_id)
+    update_data = portfolio_in.model_dump(exclude_unset=True)
+
+    if "account_id" in update_data:
+        account = _get_owned_account(session, current_user, update_data["account_id"])
+        if not account.is_active:
+            raise HTTPException(
+                status_code=409,
+                detail="Cannot assign portfolio to inactive account",
+            )
+
+    portfolio.sqlmodel_update({**update_data, "updated_at": get_datetime_utc()})
+    session.add(portfolio)
+    session.commit()
+    session.refresh(portfolio)
+    return PortfolioPublic.model_validate(portfolio)
+
+
 @router.get("", response_model=PortfoliosPublic)
 def read_portfolios(
     session: SessionDep,
     current_user: CurrentUser,
+    account_id: uuid.UUID | None = None,
     include_inactive: bool = False,
 ) -> PortfoliosPublic:
     statement = select(Portfolio).where(Portfolio.owner_id == current_user.id)
+    if account_id is not None:
+        _get_owned_account(session, current_user, account_id)
+        statement = statement.where(Portfolio.account_id == account_id)
     if not include_inactive:
         statement = statement.where(col(Portfolio.is_active).is_(True))
     rows = session.exec(statement.order_by(col(Portfolio.updated_at).desc())).all()

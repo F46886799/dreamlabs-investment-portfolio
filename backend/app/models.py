@@ -142,6 +142,16 @@ class AccountCreate(AccountBase):
     pass
 
 
+class AccountUpdate(SQLModel):
+    name: str | None = Field(default=None, min_length=1, max_length=255)
+    account_type: AccountType | None = None
+    institution_name: str | None = Field(default=None, min_length=1, max_length=255)
+    account_mask: str | None = Field(default=None, max_length=32)
+    base_currency: str | None = Field(default=None, max_length=8)
+    notes: str | None = Field(default=None, max_length=1000)
+    is_active: bool | None = None
+
+
 class Account(AccountBase, table=True):
     id: uuid.UUID = Field(default_factory=uuid.uuid4, primary_key=True)
     owner_id: uuid.UUID = Field(
@@ -183,6 +193,13 @@ class PortfolioBase(SQLModel):
 
 class PortfolioCreate(PortfolioBase):
     pass
+
+
+class PortfolioUpdate(SQLModel):
+    name: str | None = Field(default=None, min_length=1, max_length=255)
+    account_id: uuid.UUID | None = None
+    description: str | None = Field(default=None, max_length=1000)
+    is_active: bool | None = None
 
 
 class Portfolio(PortfolioBase, table=True):

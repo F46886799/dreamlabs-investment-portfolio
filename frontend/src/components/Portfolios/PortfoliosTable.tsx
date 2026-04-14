@@ -3,7 +3,11 @@ import { useMemo } from "react"
 
 import type { AccountPublic, PortfolioPublic } from "@/client"
 import { DataTable } from "@/components/Common/DataTable"
+import { PortfolioFormDialog } from "@/components/Portfolios/PortfolioFormDialog"
 import { Badge } from "@/components/ui/badge"
+import { Button } from "@/components/ui/button"
+import { LoadingButton } from "@/components/ui/loading-button"
+import { useUpdatePortfolio } from "@/hooks/usePortfolios"
 
 interface PortfoliosTableProps {
   accounts: AccountPublic[]
@@ -15,6 +19,47 @@ function formatDate(value: string) {
     dateStyle: "medium",
     timeStyle: "short",
   }).format(new Date(value))
+}
+
+function PortfolioActions({
+  accounts,
+  portfolio,
+}: {
+  accounts: AccountPublic[]
+  portfolio: PortfolioPublic
+}) {
+  const toggleMutation = useUpdatePortfolio({
+    successMessage: portfolio.is_active ? "组合已停用" : "组合已启用",
+  })
+
+  return (
+    <div className="flex items-center justify-end gap-2">
+      <PortfolioFormDialog
+        mode="edit"
+        accounts={accounts}
+        portfolio={portfolio}
+        trigger={
+          <Button variant="outline" size="sm">
+            编辑
+          </Button>
+        }
+      />
+      <LoadingButton
+        type="button"
+        size="sm"
+        variant={portfolio.is_active ? "outline" : "secondary"}
+        loading={toggleMutation.isPending}
+        onClick={() =>
+          toggleMutation.mutate({
+            portfolioId: portfolio.id,
+            requestBody: { is_active: !portfolio.is_active },
+          })
+        }
+      >
+        {portfolio.is_active ? "停用" : "启用"}
+      </LoadingButton>
+    </div>
+  )
 }
 
 export function PortfoliosTable({ accounts, data }: PortfoliosTableProps) {
@@ -72,8 +117,15 @@ export function PortfoliosTable({ accounts, data }: PortfoliosTableProps) {
           </span>
         ),
       },
+      {
+        id: "actions",
+        header: () => <span className="sr-only">操作</span>,
+        cell: ({ row }) => (
+          <PortfolioActions accounts={accounts} portfolio={row.original} />
+        ),
+      },
     ],
-    [accountNames],
+    [accountNames, accounts],
   )
 
   return <DataTable columns={columns} data={data} />

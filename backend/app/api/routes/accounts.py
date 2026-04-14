@@ -1,10 +1,28 @@
-from fastapi import APIRouter
+import uuid
+
+from fastapi import APIRouter, HTTPException
 from sqlmodel import col, select
 
 from app.api.deps import CurrentUser, SessionDep
-from app.models import Account, AccountCreate, AccountPublic, AccountsPublic
+from app.models import (
+    Account,
+    AccountCreate,
+    AccountPublic,
+    AccountsPublic,
+    AccountUpdate,
+    get_datetime_utc,
+)
 
 router = APIRouter(prefix="/accounts", tags=["accounts"])
+
+
+def _get_owned_account(
+    session: SessionDep, current_user: CurrentUser, account_id: uuid.UUID
+) -> Account:
+    account = session.get(Account, account_id)
+    if not account or account.owner_id != current_user.id:
+        raise HTTPException(status_code=404, detail="Account not found")
+    return account
 
 
 @router.post("", response_model=AccountPublic)
@@ -12,6 +30,22 @@ def create_account(
     session: SessionDep, current_user: CurrentUser, account_in: AccountCreate
 ) -> AccountPublic:
     account = Account(owner_id=current_user.id, **account_in.model_dump())
+    session.add(account)
+    session.commit()
+    session.refresh(account)
+    return AccountPublic.model_validate(account)
+
+
+@router.put("/{account_id}", response_model=AccountPublic)
+def update_account(
+    session: SessionDep,
+    current_user: CurrentUser,
+    account_id: uuid.UUID,
+    account_in: AccountUpdate,
+) -> AccountPublic:
+    account = _get_owned_account(session, current_user, account_id)
+    update_data = account_in.model_dump(exclude_unset=True)
+    account.sqlmodel_update({**update_data, "updated_at": get_datetime_utc()})
     session.add(account)
     session.commit()
     session.refresh(account)

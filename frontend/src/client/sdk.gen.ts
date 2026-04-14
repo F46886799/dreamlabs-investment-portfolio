@@ -3,7 +3,7 @@
 import type { CancelablePromise } from './core/CancelablePromise';
 import { OpenAPI } from './core/OpenAPI';
 import { request as __request } from './core/request';
-import type { AccountsCreateAccountData, AccountsCreateAccountResponse, AccountsReadAccountsData, AccountsReadAccountsResponse, ItemsReadItemsData, ItemsReadItemsResponse, ItemsCreateItemData, ItemsCreateItemResponse, ItemsReadItemData, ItemsReadItemResponse, ItemsUpdateItemData, ItemsUpdateItemResponse, ItemsDeleteItemData, ItemsDeleteItemResponse, LoginLoginAccessTokenData, LoginLoginAccessTokenResponse, LoginTestTokenResponse, LoginRecoverPasswordData, LoginRecoverPasswordResponse, LoginResetPasswordData, LoginResetPasswordResponse, LoginRecoverPasswordHtmlContentData, LoginRecoverPasswordHtmlContentResponse, PortfolioSyncConnectorPositionsData, PortfolioSyncConnectorPositionsResponse, PortfolioGetUnifiedPortfolioData, PortfolioGetUnifiedPortfolioResponse, PortfolioGetHealthReportData, PortfolioGetHealthReportResponse, PortfolioGetAuditEventsResponse, PortfoliosCreatePortfolioData, PortfoliosCreatePortfolioResponse, PortfoliosReadPortfoliosData, PortfoliosReadPortfoliosResponse, PrivateCreateUserData, PrivateCreateUserResponse, UsersReadUsersData, UsersReadUsersResponse, UsersCreateUserData, UsersCreateUserResponse, UsersReadUserMeResponse, UsersDeleteUserMeResponse, UsersUpdateUserMeData, UsersUpdateUserMeResponse, UsersUpdatePasswordMeData, UsersUpdatePasswordMeResponse, UsersRegisterUserData, UsersRegisterUserResponse, UsersReadUserByIdData, UsersReadUserByIdResponse, UsersUpdateUserData, UsersUpdateUserResponse, UsersDeleteUserData, UsersDeleteUserResponse, UtilsTestEmailData, UtilsTestEmailResponse, UtilsHealthCheckResponse } from './types.gen';
+import type { AccountsCreateAccountData, AccountsCreateAccountResponse, AccountsReadAccountsData, AccountsReadAccountsResponse, AccountsUpdateAccountData, AccountsUpdateAccountResponse, ItemsReadItemsData, ItemsReadItemsResponse, ItemsCreateItemData, ItemsCreateItemResponse, ItemsReadItemData, ItemsReadItemResponse, ItemsUpdateItemData, ItemsUpdateItemResponse, ItemsDeleteItemData, ItemsDeleteItemResponse, LoginLoginAccessTokenData, LoginLoginAccessTokenResponse, LoginTestTokenResponse, LoginRecoverPasswordData, LoginRecoverPasswordResponse, LoginResetPasswordData, LoginResetPasswordResponse, LoginRecoverPasswordHtmlContentData, LoginRecoverPasswordHtmlContentResponse, PortfolioSyncConnectorPositionsData, PortfolioSyncConnectorPositionsResponse, PortfolioGetUnifiedPortfolioData, PortfolioGetUnifiedPortfolioResponse, PortfolioGetHealthReportData, PortfolioGetHealthReportResponse, PortfolioGetAuditEventsResponse, PortfoliosCreatePortfolioData, PortfoliosCreatePortfolioResponse, PortfoliosReadPortfoliosData, PortfoliosReadPortfoliosResponse, PortfoliosUpdatePortfolioData, PortfoliosUpdatePortfolioResponse, PrivateCreateUserData, PrivateCreateUserResponse, UsersReadUsersData, UsersReadUsersResponse, UsersCreateUserData, UsersCreateUserResponse, UsersReadUserMeResponse, UsersDeleteUserMeResponse, UsersUpdateUserMeData, UsersUpdateUserMeResponse, UsersUpdatePasswordMeData, UsersUpdatePasswordMeResponse, UsersRegisterUserData, UsersRegisterUserResponse, UsersReadUserByIdData, UsersReadUserByIdResponse, UsersUpdateUserData, UsersUpdateUserResponse, UsersDeleteUserData, UsersDeleteUserResponse, UtilsTestEmailData, UtilsTestEmailResponse, UtilsHealthCheckResponse } from './types.gen';
 
 export class AccountsService {
     /**
@@ -39,6 +39,29 @@ export class AccountsService {
             query: {
                 include_inactive: data.includeInactive
             },
+            errors: {
+                422: 'Validation Error'
+            }
+        });
+    }
+    
+    /**
+     * Update Account
+     * @param data The data for the request.
+     * @param data.accountId
+     * @param data.requestBody
+     * @returns AccountPublic Successful Response
+     * @throws ApiError
+     */
+    public static updateAccount(data: AccountsUpdateAccountData): CancelablePromise<AccountsUpdateAccountResponse> {
+        return __request(OpenAPI, {
+            method: 'PUT',
+            url: '/api/v1/accounts/{account_id}',
+            path: {
+                account_id: data.accountId
+            },
+            body: data.requestBody,
+            mediaType: 'application/json',
             errors: {
                 422: 'Validation Error'
             }
@@ -359,6 +382,7 @@ export class PortfoliosService {
     /**
      * Read Portfolios
      * @param data The data for the request.
+     * @param data.accountId
      * @param data.includeInactive
      * @returns PortfoliosPublic Successful Response
      * @throws ApiError
@@ -368,8 +392,32 @@ export class PortfoliosService {
             method: 'GET',
             url: '/api/v1/portfolios',
             query: {
+                account_id: data.accountId,
                 include_inactive: data.includeInactive
             },
+            errors: {
+                422: 'Validation Error'
+            }
+        });
+    }
+    
+    /**
+     * Update Portfolio
+     * @param data The data for the request.
+     * @param data.portfolioId
+     * @param data.requestBody
+     * @returns PortfolioPublic Successful Response
+     * @throws ApiError
+     */
+    public static updatePortfolio(data: PortfoliosUpdatePortfolioData): CancelablePromise<PortfoliosUpdatePortfolioResponse> {
+        return __request(OpenAPI, {
+            method: 'PUT',
+            url: '/api/v1/portfolios/{portfolio_id}',
+            path: {
+                portfolio_id: data.portfolioId
+            },
+            body: data.requestBody,
+            mediaType: 'application/json',
             errors: {
                 422: 'Validation Error'
             }

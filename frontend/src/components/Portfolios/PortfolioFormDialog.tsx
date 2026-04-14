@@ -1,10 +1,15 @@
 import { zodResolver } from "@hookform/resolvers/zod"
 import { Plus } from "lucide-react"
-import { useEffect, useMemo, useState } from "react"
+import { type ReactNode, useEffect, useMemo, useState } from "react"
 import { useForm } from "react-hook-form"
 import { z } from "zod"
 
-import type { AccountPublic, PortfolioCreate } from "@/client"
+import type {
+  AccountPublic,
+  PortfolioCreate,
+  PortfolioPublic,
+  PortfolioUpdate,
+} from "@/client"
 import { Button } from "@/components/ui/button"
 import {
   Dialog,
@@ -33,7 +38,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select"
-import { useCreatePortfolio } from "@/hooks/usePortfolios"
+import { useCreatePortfolio, useUpdatePortfolio } from "@/hooks/usePortfolios"
 
 const formSchema = z.object({
   account_id: z.string().min(1, { message: "请选择所属账户" }),
@@ -46,26 +51,43 @@ type FormData = z.infer<typeof formSchema>
 
 interface PortfolioFormDialogProps {
   accounts: AccountPublic[]
-  mode: "create"
+  mode: "create" | "edit"
+  portfolio?: PortfolioPublic
+  trigger?: ReactNode
 }
 
 export function PortfolioFormDialog({
   accounts,
   mode,
+  portfolio,
+  trigger,
 }: PortfolioFormDialogProps) {
   const [isOpen, setIsOpen] = useState(false)
   const activeAccounts = useMemo(
     () => accounts.filter((account) => account.is_active),
     [accounts],
   )
+  const selectableAccounts = useMemo(() => {
+    if (mode === "create") {
+      return activeAccounts
+    }
+
+    return accounts.filter(
+      (account) => account.is_active || account.id === portfolio?.account_id,
+    )
+  }, [accounts, activeAccounts, mode, portfolio?.account_id])
   const defaultValues = useMemo<FormData>(
     () => ({
-      account_id: activeAccounts[0]?.id ?? "",
-      description: "",
-      is_active: true,
-      name: "",
+      account_id:
+        portfolio?.account_id ??
+        activeAccounts[0]?.id ??
+        selectableAccounts[0]?.id ??
+        "",
+      description: portfolio?.description ?? "",
+      is_active: portfolio?.is_active ?? true,
+      name: portfolio?.name ?? "",
     }),
-    [activeAccounts],
+    [activeAccounts, portfolio, selectableAccounts],
   )
   const form = useForm<FormData>({
     resolver: zodResolver(formSchema),
@@ -73,16 +95,29 @@ export function PortfolioFormDialog({
     criteriaMode: "all",
     defaultValues,
   })
-  const mutation = useCreatePortfolio(() => {
+  const createMutation = useCreatePortfolio(() => {
     form.reset(defaultValues)
     setIsOpen(false)
   })
+  const updateMutation = useUpdatePortfolio({
+    onSuccess: () => {
+      setIsOpen(false)
+    },
+    successMessage: "组合更新成功",
+  })
+  const mutation = mode === "create" ? createMutation : updateMutation
 
   useEffect(() => {
-    if (!form.getValues("account_id") && activeAccounts.length > 0) {
-      form.setValue("account_id", activeAccounts[0].id)
+    if (!form.getValues("account_id") && selectableAccounts.length > 0) {
+      form.setValue("account_id", selectableAccounts[0].id)
     }
-  }, [activeAccounts, form])
+  }, [form, selectableAccounts])
+
+  useEffect(() => {
+    if (isOpen) {
+      form.reset(defaultValues)
+    }
+  }, [defaultValues, form, isOpen])
 
   const onSubmit = (data: FormData) => {
     const payload: PortfolioCreate = {
@@ -90,7 +125,35 @@ export function PortfolioFormDialog({
       description: data.description || undefined,
     }
 
-    mutation.mutate(payload)
+    if (mode === "create") {
+      createMutation.mutate(payload)
+      return
+    }
+
+    if (!portfolio) {
+      return
+    }
+
+    const dirtyFields = form.formState.dirtyFields
+    const updatePayload: PortfolioUpdate = {}
+
+    if (dirtyFields.name) {
+      updatePayload.name = data.name
+    }
+    if (dirtyFields.account_id) {
+      updatePayload.account_id = data.account_id
+    }
+    if (dirtyFields.description) {
+      updatePayload.description = data.description || undefined
+    }
+    if (dirtyFields.is_active) {
+      updatePayload.is_active = data.is_active
+    }
+
+    updateMutation.mutate({
+      portfolioId: portfolio.id,
+      requestBody: updatePayload,
+    })
   }
 
   return (
@@ -104,10 +167,12 @@ export function PortfolioFormDialog({
       }}
     >
       <DialogTrigger asChild>
-        <Button>
-          <Plus className="size-4" />
-          {mode === "create" ? "新增组合" : "编辑组合"}
-        </Button>
+        {trigger ?? (
+          <Button>
+            <Plus className="size-4" />
+            {mode === "create" ? "新增组合" : "编辑组合"}
+          </Button>
+        )}
       </DialogTrigger>
       <DialogContent className="sm:max-w-md">
         <DialogHeader>
@@ -148,7 +213,7 @@ export function PortfolioFormDialog({
                         </SelectTrigger>
                       </FormControl>
                       <SelectContent>
-                        {activeAccounts.map((account) => (
+                        {selectableAccounts.map((account) => (
                           <SelectItem key={account.id} value={account.id}>
                             {account.name}
                           </SelectItem>
@@ -174,7 +239,7 @@ export function PortfolioFormDialog({
                 )}
               />
 
-              {activeAccounts.length === 0 && (
+              {mode === "create" && activeAccounts.length === 0 && (
                 <p className="text-sm text-muted-foreground">
                   请先创建启用中的账户，再新增投资组合。
                 </p>
@@ -190,7 +255,7 @@ export function PortfolioFormDialog({
               <LoadingButton
                 type="submit"
                 loading={mutation.isPending}
-                disabled={activeAccounts.length === 0}
+                disabled={mode === "create" && selectableAccounts.length === 0}
               >
                 保存
               </LoadingButton>

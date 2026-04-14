@@ -1,6 +1,10 @@
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query"
 
-import { type AccountCreate, AccountsService } from "@/client"
+import {
+  type AccountCreate,
+  AccountsService,
+  type AccountUpdate,
+} from "@/client"
 import useCustomToast from "@/hooks/useCustomToast"
 import { handleError } from "@/utils"
 
@@ -26,6 +30,32 @@ export function useCreateAccount(onSuccess?: () => void) {
     onSuccess: () => {
       showSuccessToast("账户创建成功")
       onSuccess?.()
+    },
+    onSettled: () => {
+      queryClient.invalidateQueries({ queryKey: ["accounts"] })
+    },
+  })
+}
+
+interface UpdateAccountVariables {
+  accountId: string
+  requestBody: AccountUpdate
+}
+
+export function useUpdateAccount(options?: {
+  onSuccess?: () => void
+  successMessage?: string
+}) {
+  const queryClient = useQueryClient()
+  const { showErrorToast, showSuccessToast } = useCustomToast()
+
+  return useMutation({
+    mutationFn: ({ accountId, requestBody }: UpdateAccountVariables) =>
+      AccountsService.updateAccount({ accountId, requestBody }),
+    onError: handleError.bind(showErrorToast),
+    onSuccess: () => {
+      showSuccessToast(options?.successMessage ?? "账户更新成功")
+      options?.onSuccess?.()
     },
     onSettled: () => {
       queryClient.invalidateQueries({ queryKey: ["accounts"] })

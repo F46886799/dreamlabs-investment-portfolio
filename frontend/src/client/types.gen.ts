@@ -31,6 +31,16 @@ export type AccountsPublic = {
 
 export type AccountType = 'brokerage' | 'bank';
 
+export type AccountUpdate = {
+    name?: (string | null);
+    account_type?: (AccountType | null);
+    institution_name?: (string | null);
+    account_mask?: (string | null);
+    base_currency?: (string | null);
+    notes?: (string | null);
+    is_active?: (boolean | null);
+};
+
 export type AuditEventPublic = {
     id: string;
     entity_type: string;
@@ -134,6 +144,13 @@ export type PortfoliosPublic = {
     count: number;
 };
 
+export type PortfolioUpdate = {
+    name?: (string | null);
+    account_id?: (string | null);
+    description?: (string | null);
+    is_active?: (boolean | null);
+};
+
 export type PrivateUserCreate = {
     email: string;
     password: string;
@@ -227,6 +244,13 @@ export type AccountsReadAccountsData = {
 
 export type AccountsReadAccountsResponse = (AccountsPublic);
 
+export type AccountsUpdateAccountData = {
+    accountId: string;
+    requestBody: AccountUpdate;
+};
+
+export type AccountsUpdateAccountResponse = (AccountPublic);
+
 export type ItemsReadItemsData = {
     limit?: number;
     skip?: number;
@@ -315,10 +339,18 @@ export type PortfoliosCreatePortfolioData = {
 export type PortfoliosCreatePortfolioResponse = (PortfolioPublic);
 
 export type PortfoliosReadPortfoliosData = {
+    accountId?: (string | null);
     includeInactive?: boolean;
 };
 
 export type PortfoliosReadPortfoliosResponse = (PortfoliosPublic);
+
+export type PortfoliosUpdatePortfolioData = {
+    portfolioId: string;
+    requestBody: PortfolioUpdate;
+};
+
+export type PortfoliosUpdatePortfolioResponse = (PortfolioPublic);
 
 export type PrivateCreateUserData = {
     requestBody: PrivateUserCreate;

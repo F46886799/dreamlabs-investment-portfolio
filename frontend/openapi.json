@@ -789,6 +789,52 @@
         }
       }
     },
+    "/api/v1/accounts/{account_id}": {
+      "put": {
+        "tags": ["accounts"],
+        "summary": "Update Account",
+        "operationId": "accounts-update_account",
+        "security": [{ "OAuth2PasswordBearer": [] }],
+        "parameters": [
+          {
+            "name": "account_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid",
+              "title": "Account Id"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": { "$ref": "#/components/schemas/AccountUpdate" }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/AccountPublic" }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/HTTPValidationError" }
+              }
+            }
+          }
+        }
+      }
+    },
     "/api/v1/portfolios": {
       "post": {
         "tags": ["portfolios"],
@@ -829,6 +875,18 @@
         "security": [{ "OAuth2PasswordBearer": [] }],
         "parameters": [
           {
+            "name": "account_id",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                { "type": "string", "format": "uuid" },
+                { "type": "null" }
+              ],
+              "title": "Account Id"
+            }
+          },
+          {
             "name": "include_inactive",
             "in": "query",
             "required": false,
@@ -845,6 +903,52 @@
             "content": {
               "application/json": {
                 "schema": { "$ref": "#/components/schemas/PortfoliosPublic" }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/HTTPValidationError" }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/portfolios/{portfolio_id}": {
+      "put": {
+        "tags": ["portfolios"],
+        "summary": "Update Portfolio",
+        "operationId": "portfolios-update_portfolio",
+        "security": [{ "OAuth2PasswordBearer": [] }],
+        "parameters": [
+          {
+            "name": "portfolio_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid",
+              "title": "Portfolio Id"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": { "$ref": "#/components/schemas/PortfolioUpdate" }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/PortfolioPublic" }
               }
             }
           },
@@ -1186,6 +1290,54 @@
         "type": "string",
         "enum": ["brokerage", "bank"],
         "title": "AccountType"
+      },
+      "AccountUpdate": {
+        "properties": {
+          "name": {
+            "anyOf": [
+              { "type": "string", "maxLength": 255, "minLength": 1 },
+              { "type": "null" }
+            ],
+            "title": "Name"
+          },
+          "account_type": {
+            "anyOf": [
+              { "$ref": "#/components/schemas/AccountType" },
+              { "type": "null" }
+            ]
+          },
+          "institution_name": {
+            "anyOf": [
+              { "type": "string", "maxLength": 255, "minLength": 1 },
+              { "type": "null" }
+            ],
+            "title": "Institution Name"
+          },
+          "account_mask": {
+            "anyOf": [
+              { "type": "string", "maxLength": 32 },
+              { "type": "null" }
+            ],
+            "title": "Account Mask"
+          },
+          "base_currency": {
+            "anyOf": [{ "type": "string", "maxLength": 8 }, { "type": "null" }],
+            "title": "Base Currency"
+          },
+          "notes": {
+            "anyOf": [
+              { "type": "string", "maxLength": 1000 },
+              { "type": "null" }
+            ],
+            "title": "Notes"
+          },
+          "is_active": {
+            "anyOf": [{ "type": "boolean" }, { "type": "null" }],
+            "title": "Is Active"
+          }
+        },
+        "type": "object",
+        "title": "AccountUpdate"
       },
       "AccountsPublic": {
         "properties": {
@@ -1538,6 +1690,37 @@
           "updated_at"
         ],
         "title": "PortfolioPublic"
+      },
+      "PortfolioUpdate": {
+        "properties": {
+          "name": {
+            "anyOf": [
+              { "type": "string", "maxLength": 255, "minLength": 1 },
+              { "type": "null" }
+            ],
+            "title": "Name"
+          },
+          "account_id": {
+            "anyOf": [
+              { "type": "string", "format": "uuid" },
+              { "type": "null" }
+            ],
+            "title": "Account Id"
+          },
+          "description": {
+            "anyOf": [
+              { "type": "string", "maxLength": 1000 },
+              { "type": "null" }
+            ],
+            "title": "Description"
+          },
+          "is_active": {
+            "anyOf": [{ "type": "boolean" }, { "type": "null" }],
+            "title": "Is Active"
+          }
+        },
+        "type": "object",
+        "title": "PortfolioUpdate"
       },
       "PortfoliosPublic": {
         "properties": {

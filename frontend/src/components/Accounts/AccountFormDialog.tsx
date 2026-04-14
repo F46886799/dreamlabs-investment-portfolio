@@ -1,10 +1,10 @@
 import { zodResolver } from "@hookform/resolvers/zod"
 import { Plus } from "lucide-react"
-import { useState } from "react"
+import { type ReactNode, useEffect, useMemo, useState } from "react"
 import { useForm } from "react-hook-form"
 import { z } from "zod"
 
-import type { AccountCreate } from "@/client"
+import type { AccountCreate, AccountPublic, AccountUpdate } from "@/client"
 import { Button } from "@/components/ui/button"
 import {
   Dialog,
@@ -33,7 +33,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select"
-import { useCreateAccount } from "@/hooks/useAccounts"
+import { useCreateAccount, useUpdateAccount } from "@/hooks/useAccounts"
 
 const formSchema = z.object({
   account_mask: z.string().optional(),
@@ -48,10 +48,12 @@ const formSchema = z.object({
 type FormData = z.infer<typeof formSchema>
 
 interface AccountFormDialogProps {
-  mode: "create"
+  mode: "create" | "edit"
+  account?: AccountPublic
+  trigger?: ReactNode
 }
 
-const defaultValues: FormData = {
+const createDefaultValues: FormData = {
   account_mask: "",
   account_type: "brokerage",
   base_currency: "USD",
@@ -61,28 +63,99 @@ const defaultValues: FormData = {
   notes: "",
 }
 
-export function AccountFormDialog({ mode }: AccountFormDialogProps) {
+function getDefaultValues(account?: AccountPublic): FormData {
+  if (!account) {
+    return createDefaultValues
+  }
+
+  return {
+    account_mask: account.account_mask ?? "",
+    account_type: account.account_type,
+    base_currency: account.base_currency ?? "USD",
+    institution_name: account.institution_name,
+    is_active: account.is_active ?? true,
+    name: account.name,
+    notes: account.notes ?? "",
+  }
+}
+
+export function AccountFormDialog({
+  mode,
+  account,
+  trigger,
+}: AccountFormDialogProps) {
   const [isOpen, setIsOpen] = useState(false)
+  const defaultValues = useMemo(() => getDefaultValues(account), [account])
   const form = useForm<FormData>({
     resolver: zodResolver(formSchema),
     mode: "onBlur",
     criteriaMode: "all",
     defaultValues,
   })
-  const mutation = useCreateAccount(() => {
-    form.reset(defaultValues)
+  const createMutation = useCreateAccount(() => {
+    form.reset(createDefaultValues)
     setIsOpen(false)
   })
+  const updateMutation = useUpdateAccount({
+    onSuccess: () => {
+      setIsOpen(false)
+    },
+    successMessage: "账户更新成功",
+  })
+  const mutation = mode === "create" ? createMutation : updateMutation
+
+  useEffect(() => {
+    if (isOpen) {
+      form.reset(defaultValues)
+    }
+  }, [defaultValues, form, isOpen])
 
   const onSubmit = (data: FormData) => {
-    const payload: AccountCreate = {
+    const payload: AccountCreate | AccountUpdate = {
       ...data,
       account_mask: data.account_mask || undefined,
       base_currency: data.base_currency.toUpperCase(),
       notes: data.notes || undefined,
     }
 
-    mutation.mutate(payload)
+    if (mode === "create") {
+      createMutation.mutate(payload as AccountCreate)
+      return
+    }
+
+    if (!account) {
+      return
+    }
+
+    const dirtyFields = form.formState.dirtyFields
+    const updatePayload: AccountUpdate = {}
+
+    if (dirtyFields.name) {
+      updatePayload.name = data.name
+    }
+    if (dirtyFields.institution_name) {
+      updatePayload.institution_name = data.institution_name
+    }
+    if (dirtyFields.account_type) {
+      updatePayload.account_type = data.account_type
+    }
+    if (dirtyFields.base_currency) {
+      updatePayload.base_currency = data.base_currency.toUpperCase()
+    }
+    if (dirtyFields.account_mask) {
+      updatePayload.account_mask = data.account_mask || undefined
+    }
+    if (dirtyFields.notes) {
+      updatePayload.notes = data.notes || undefined
+    }
+    if (dirtyFields.is_active) {
+      updatePayload.is_active = data.is_active
+    }
+
+    updateMutation.mutate({
+      accountId: account.id,
+      requestBody: updatePayload,
+    })
   }
 
   return (
@@ -96,10 +169,12 @@ export function AccountFormDialog({ mode }: AccountFormDialogProps) {
       }}
     >
       <DialogTrigger asChild>
-        <Button>
-          <Plus className="size-4" />
-          {mode === "create" ? "新增账户" : "编辑账户"}
-        </Button>
+        {trigger ?? (
+          <Button>
+            <Plus className="size-4" />
+            {mode === "create" ? "新增账户" : "编辑账户"}
+          </Button>
+        )}
       </DialogTrigger>
       <DialogContent className="sm:max-w-md">
         <DialogHeader>

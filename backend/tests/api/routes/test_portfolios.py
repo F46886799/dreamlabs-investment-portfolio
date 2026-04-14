@@ -190,3 +190,92 @@ def test_list_portfolios_filters_by_owner_and_active_state(
     assert "活跃组合" in listed_with_inactive_names
     assert "停用组合" in listed_with_inactive_names
     assert "其他用户组合" not in listed_with_inactive_names
+
+    scoped_response = client.get(
+        f"{settings.API_V1_STR}/portfolios?account_id={active_account_id}",
+        headers=superuser_token_headers,
+    )
+
+    assert scoped_response.status_code == 200
+    scoped_names = {portfolio["name"] for portfolio in scoped_response.json()["data"]}
+    assert scoped_names == {"活跃组合"}
+
+    scoped_with_inactive_response = client.get(
+        (
+            f"{settings.API_V1_STR}/portfolios"
+            f"?account_id={inactive_account_id}&include_inactive=true"
+        ),
+        headers=superuser_token_headers,
+    )
+
+    assert scoped_with_inactive_response.status_code == 200
+    scoped_with_inactive_names = {
+        portfolio["name"]
+        for portfolio in scoped_with_inactive_response.json()["data"]
+    }
+    assert scoped_with_inactive_names == {"停用组合"}
+
+
+def test_update_portfolio_supports_edit_and_toggle(
+    client: TestClient, superuser_token_headers: dict[str, str]
+) -> None:
+    primary_account_id = _create_account(
+        client,
+        superuser_token_headers,
+        name="主账户",
+    )["id"]
+    secondary_account_id = _create_account(
+        client,
+        superuser_token_headers,
+        name="备用账户",
+    )["id"]
+
+    create_response = client.post(
+        f"{settings.API_V1_STR}/portfolios",
+        headers=superuser_token_headers,
+        json={
+            "name": "原始组合",
+            "account_id": primary_account_id,
+            "description": "原始描述",
+            "is_active": True,
+        },
+    )
+
+    assert create_response.status_code == 200
+    created = create_response.json()
+
+    update_response = client.put(
+        f"{settings.API_V1_STR}/portfolios/{created['id']}",
+        headers=superuser_token_headers,
+        json={
+            "name": "更新后组合",
+            "account_id": secondary_account_id,
+            "description": "更新后的描述",
+            "is_active": False,
+        },
+    )
+
+    assert update_response.status_code == 200
+    updated = update_response.json()
+    assert updated["name"] == "更新后组合"
+    assert updated["account_id"] == secondary_account_id
+    assert updated["description"] == "更新后的描述"
+    assert updated["is_active"] is False
+    assert updated["updated_at"] != created["updated_at"]
+
+    scoped_response = client.get(
+        (
+            f"{settings.API_V1_STR}/portfolios"
+            f"?account_id={secondary_account_id}&include_inactive=true"
+        ),
+        headers=superuser_token_headers,
+    )
+
+    assert scoped_response.status_code == 200
+    matching_portfolios = [
+        portfolio
+        for portfolio in scoped_response.json()["data"]
+        if portfolio["id"] == created["id"]
+    ]
+    assert len(matching_portfolios) == 1
+    assert matching_portfolios[0]["is_active"] is False
