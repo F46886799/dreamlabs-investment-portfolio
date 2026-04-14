@@ -8,6 +8,9 @@ import { logInUser } from "./utils/user";
 const randomPersonName = () =>
   `自动化人员-${Date.now()}-${Math.floor(Math.random() * 1000)}`;
 
+const randomOrganizationName = () =>
+  `自动化机构-${Date.now()}-${Math.floor(Math.random() * 1000)}`;
+
 test.describe("Subjects workspace access control", () => {
   test.use({ storageState: { cookies: [], origins: [] } });
 
@@ -87,6 +90,72 @@ test.describe("Subjects workspace access control", () => {
     await page.getByRole("button", { name: "删除" }).click();
 
     await expect(page.getByText("人员已成功删除")).toBeVisible();
+    await expect(
+      page.getByRole("row").filter({ hasText: updatedName }),
+    ).not.toBeVisible();
+  });
+
+  test("Superuser can create, edit, and delete an organization", async ({
+    page,
+  }) => {
+    const createdName = randomOrganizationName();
+    const updatedName = randomOrganizationName();
+
+    await logInUser(page, firstSuperuser, firstSuperuserPassword);
+    await page.goto("/subjects");
+    await page.getByRole("tab", { name: "机构" }).click();
+
+    await expect(page.getByRole("button", { name: "新增机构" })).toBeVisible();
+
+    await page.getByRole("button", { name: "新增机构" }).click();
+    await page.getByLabel("机构类型").click();
+    await page.getByRole("option", { name: "服务提供方" }).click();
+    await page.getByLabel("机构名称").fill(createdName);
+    await page.getByLabel("别名").fill("初始机构别名");
+    await page.getByLabel("备注").fill("初始机构备注");
+    await page.getByRole("button", { name: "保存" }).click();
+
+    await expect(page.getByText("机构创建成功")).toBeVisible();
+    await expect(page.getByRole("dialog")).not.toBeVisible();
+
+    const createdRow = page.getByRole("row").filter({ hasText: createdName });
+    await expect(createdRow).toBeVisible();
+
+    await page.getByRole("tab", { name: "人员" }).click();
+    await expect(page.getByRole("button", { name: "新增人员" })).toBeVisible();
+    await expect(page.getByRole("button", { name: "新增机构" })).not.toBeVisible();
+    await expect(
+      page.getByRole("row").filter({ hasText: createdName }),
+    ).not.toBeVisible();
+
+    await page.getByRole("tab", { name: "机构" }).click();
+    await expect(page.getByRole("button", { name: "新增机构" })).toBeVisible();
+    await expect(page.getByRole("button", { name: "新增人员" })).not.toBeVisible();
+    await expect(createdRow).toBeVisible();
+
+    await createdRow
+      .getByRole("button", { name: `操作 ${createdName}` })
+      .click();
+    await page.getByRole("menuitem", { name: "编辑机构" }).click();
+    await page.getByLabel("机构类型").click();
+    await page.getByRole("option", { name: "券商/银行" }).click();
+    await page.getByLabel("机构名称").fill(updatedName);
+    await page.getByLabel("别名").fill("更新机构别名");
+    await page.getByLabel("备注").fill("更新机构备注");
+    await page.getByRole("button", { name: "保存" }).click();
+
+    await expect(page.getByText("机构更新成功")).toBeVisible();
+
+    const updatedRow = page.getByRole("row").filter({ hasText: updatedName });
+    await expect(updatedRow).toBeVisible();
+
+    await updatedRow
+      .getByRole("button", { name: `操作 ${updatedName}` })
+      .click();
+    await page.getByRole("menuitem", { name: "删除机构" }).click();
+    await page.getByRole("button", { name: "删除" }).click();
+
+    await expect(page.getByText("机构已成功删除")).toBeVisible();
     await expect(
       page.getByRole("row").filter({ hasText: updatedName }),
     ).not.toBeVisible();
