@@ -1,6 +1,10 @@
 import { defineConfig, devices } from '@playwright/test';
 import 'dotenv/config'
 
+const frontendHost = '127.0.0.1'
+const frontendPort = Number(process.env.PLAYWRIGHT_FRONTEND_PORT ?? '4173')
+const frontendUrl = `http://${frontendHost}:${frontendPort}`
+
 /**
  * Read environment variables from file.
  * https://github.com/motdotla/dotenv
@@ -24,7 +28,7 @@ export default defineConfig({
   /* Shared settings for all the projects below. See https://playwright.dev/docs/api/class-testoptions. */
   use: {
     /* Base URL to use in actions like `await page.goto('/')`. */
-    baseURL: 'http://localhost:5173',
+    baseURL: frontendUrl,
 
     /* Collect trace when retrying the failed test. See https://playwright.dev/docs/trace-viewer */
     trace: 'on-first-retry',
@@ -106,8 +110,8 @@ export default defineConfig({
 
   /* Run your local dev server before starting the tests */
   webServer: {
-    command: 'bun run dev',
-    url: 'http://localhost:5173',
+    command: `bun run dev -- --host ${frontendHost} --port ${frontendPort}`,
+    url: frontendUrl,
     reuseExistingServer: !process.env.CI,
   },
 });
