@@ -622,7 +622,10 @@ test.describe("Portfolio pages", () => {
     await expect(page.getByText("AAPL")).toBeVisible()
     await expect.poll(() => unifiedQueries.at(-1)).toBe("")
     await expect.poll(() => healthQueries.at(-1)).toBe("")
-    await expect(page.getByRole("combobox", { name: "组合" })).toBeDisabled()
+    const portfolioFilter = page.getByRole("combobox", { name: "组合" })
+    await expect(portfolioFilter).toBeDisabled()
+    await expect(portfolioFilter).toContainText("请先选择账户后查看组合")
+    await expect(page.getByText("请先选择账户后再筛选组合。")).toBeVisible()
 
     await page.getByRole("combobox", { name: "账户" }).click()
     await page.getByRole("option", { name: secondaryAccount.name }).click()
@@ -635,9 +638,15 @@ test.describe("Portfolio pages", () => {
       .toContain(`account_id=${secondaryAccount.id}`)
     await expect(page.getByText("BND")).toBeVisible()
     await expect(page.getByText("AAPL")).not.toBeVisible()
-    await expect(page.getByRole("combobox", { name: "组合" })).toBeEnabled()
-
+    await expect(portfolioFilter).toBeEnabled()
     await page.getByRole("combobox", { name: "组合" }).click()
+    await expect(page.getByRole("option", { name: "全部组合" })).toBeVisible()
+    await expect(
+      page.getByRole("option", { name: secondaryPortfolio.name }),
+    ).toBeVisible()
+    await expect(
+      page.getByRole("option", { name: primaryPortfolio.name }),
+    ).toHaveCount(0)
     await page.getByRole("option", { name: secondaryPortfolio.name }).click()
 
     await expect
@@ -666,6 +675,15 @@ test.describe("Portfolio pages", () => {
       .not.toContain("portfolio_id=")
     await expect(page.getByText("AAPL")).toBeVisible()
     await expect(page.getByRole("row", { name: /CASH/ })).not.toBeVisible()
+
+    await page.getByRole("combobox", { name: "组合" }).click()
+    await expect(page.getByRole("option", { name: "全部组合" })).toBeVisible()
+    await expect(
+      page.getByRole("option", { name: primaryPortfolio.name }),
+    ).toBeVisible()
+    await expect(
+      page.getByRole("option", { name: secondaryPortfolio.name }),
+    ).toHaveCount(0)
   })
 
   test("Conflicts page shows normalization conflict records", async ({

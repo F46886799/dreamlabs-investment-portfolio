@@ -29,6 +29,8 @@ export function PortfolioFilters({
   onAccountChange,
   onPortfolioChange,
 }: PortfolioFiltersProps) {
+  const isPortfolioSelectBlocked = !accountId
+
   return (
     <div className="grid gap-4 rounded-lg border bg-card p-4 md:grid-cols-2">
       <div className="grid gap-2">
@@ -61,8 +63,8 @@ export function PortfolioFilters({
       <div className="grid gap-2">
         <Label htmlFor="portfolio-portfolio-filter">组合</Label>
         <Select
-          disabled={isPortfoliosLoading || !accountId}
-          value={portfolioId ?? "all"}
+          disabled={isPortfoliosLoading || isPortfolioSelectBlocked}
+          value={isPortfolioSelectBlocked ? undefined : (portfolioId ?? "all")}
           onValueChange={(value) =>
             onPortfolioChange(value === "all" ? undefined : value)
           }
@@ -70,14 +72,19 @@ export function PortfolioFilters({
           <SelectTrigger
             id="portfolio-portfolio-filter"
             aria-label="组合"
+            aria-describedby={
+              isPortfolioSelectBlocked
+                ? "portfolio-filter-blocked-hint"
+                : undefined
+            }
             className="w-full"
           >
             <SelectValue
-              placeholder={accountId ? "全部组合" : "请先选择账户"}
+              placeholder={accountId ? "全部组合" : "请先选择账户后查看组合"}
             />
           </SelectTrigger>
           <SelectContent>
-            <SelectItem value="all">全部组合</SelectItem>
+            {accountId ? <SelectItem value="all">全部组合</SelectItem> : null}
             {portfolios.map((portfolio) => (
               <SelectItem key={portfolio.id} value={portfolio.id}>
                 {portfolio.name}
@@ -85,6 +92,14 @@ export function PortfolioFilters({
             ))}
           </SelectContent>
         </Select>
+        {isPortfolioSelectBlocked ? (
+          <p
+            id="portfolio-filter-blocked-hint"
+            className="text-xs text-muted-foreground"
+          >
+            请先选择账户后再筛选组合。
+          </p>
+        ) : null}
       </div>
     </div>
   )
