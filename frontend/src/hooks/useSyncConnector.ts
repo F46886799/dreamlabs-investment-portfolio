@@ -1,10 +1,12 @@
 import { useMutation, useQueryClient } from "@tanstack/react-query"
 
-import {
-  PortfolioService,
-  type PortfolioSyncConnectorPositionsData,
-} from "@/client"
+import { PortfolioService } from "@/client"
 import useCustomToast from "@/hooks/useCustomToast"
+
+interface SyncConnectorVariables {
+  accountId: string
+  source?: string
+}
 
 export function useSyncConnector(defaultSource = "demo-broker") {
   const queryClient = useQueryClient()
@@ -14,7 +16,7 @@ export function useSyncConnector(defaultSource = "demo-broker") {
     mutationFn: ({
       accountId,
       source = defaultSource,
-    }: PortfolioSyncConnectorPositionsData) =>
+    }: SyncConnectorVariables) =>
       PortfolioService.syncConnectorPositions({
         accountId,
         source,

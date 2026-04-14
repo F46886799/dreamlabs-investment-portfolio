@@ -45,7 +45,17 @@ def update_account(
 ) -> AccountPublic:
     account = _get_owned_account(session, current_user, account_id)
     update_data = account_in.model_dump(exclude_unset=True)
-    account.sqlmodel_update({**update_data, "updated_at": get_datetime_utc()})
+
+    if not update_data:
+        return AccountPublic.model_validate(account)
+
+    changed_data = {
+        field: value for field, value in update_data.items() if getattr(account, field) != value
+    }
+    if not changed_data:
+        return AccountPublic.model_validate(account)
+
+    account.sqlmodel_update({**changed_data, "updated_at": get_datetime_utc()})
     session.add(account)
     session.commit()
     session.refresh(account)

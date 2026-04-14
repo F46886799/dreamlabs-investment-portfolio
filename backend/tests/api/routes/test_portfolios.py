@@ -335,3 +335,50 @@ def test_update_portfolio_rejects_inactive_account_reassignment(
     ]
     assert len(matching_portfolios) == 1
     assert matching_portfolios[0]["account_id"] == active_account_id
+
+
+def test_update_portfolio_noop_keeps_updated_at_unchanged(
+    client: TestClient, superuser_token_headers: dict[str, str]
+) -> None:
+    account_id = _create_account(
+        client,
+        superuser_token_headers,
+        name="稳定账户",
+    )["id"]
+
+    create_response = client.post(
+        f"{settings.API_V1_STR}/portfolios",
+        headers=superuser_token_headers,
+        json={
+            "name": "稳定组合",
+            "account_id": account_id,
+            "description": "保持不变",
+            "is_active": True,
+        },
+    )
+
+    assert create_response.status_code == 200
+    created = create_response.json()
+
+    empty_update_response = client.put(
+        f"{settings.API_V1_STR}/portfolios/{created['id']}",
+        headers=superuser_token_headers,
+        json={},
+    )
+
+    assert empty_update_response.status_code == 200
+    assert empty_update_response.json()["updated_at"] == created["updated_at"]
+
+    same_value_update_response = client.put(
+        f"{settings.API_V1_STR}/portfolios/{created['id']}",
+        headers=superuser_token_headers,
+        json={
+            "name": created["name"],
+            "account_id": created["account_id"],
+            "description": created["description"],
+            "is_active": created["is_active"],
+        },
+    )
+
+    assert same_value_update_response.status_code == 200
+    assert same_value_update_response.json()["updated_at"] == created["updated_at"]

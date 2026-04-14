@@ -182,3 +182,48 @@ def test_create_account_rejects_invalid_account_type(
     )
 
     assert response.status_code == 422
+
+
+def test_update_account_noop_keeps_updated_at_unchanged(
+    client: TestClient, superuser_token_headers: dict[str, str]
+) -> None:
+    create_response = client.post(
+        f"{settings.API_V1_STR}/accounts",
+        headers=superuser_token_headers,
+        json={
+            "name": "稳定账户",
+            "account_type": "brokerage",
+            "institution_name": "Noop Broker",
+            "account_mask": "****2222",
+            "base_currency": "USD",
+            "notes": "保持不变",
+            "is_active": True,
+        },
+    )
+
+    assert create_response.status_code == 200
+    created = create_response.json()
+
+    empty_update_response = client.put(
+        f"{settings.API_V1_STR}/accounts/{created['id']}",
+        headers=superuser_token_headers,
+        json={},
+    )
+
+    assert empty_update_response.status_code == 200
+    assert empty_update_response.json()["updated_at"] == created["updated_at"]
+
+    same_value_update_response = client.put(
+        f"{settings.API_V1_STR}/accounts/{created['id']}",
+        headers=superuser_token_headers,
+        json={
+            "name": created["name"],
+            "institution_name": created["institution_name"],
+            "base_currency": created["base_currency"],
+            "notes": created["notes"],
+            "is_active": created["is_active"],
+        },
+    )
+
+    assert same_value_update_response.status_code == 200
+    assert same_value_update_response.json()["updated_at"] == created["updated_at"]

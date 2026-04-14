@@ -65,15 +65,26 @@ def update_portfolio(
     portfolio = _get_owned_portfolio(session, current_user, portfolio_id)
     update_data = portfolio_in.model_dump(exclude_unset=True)
 
-    if "account_id" in update_data:
-        account = _get_owned_account(session, current_user, update_data["account_id"])
+    if not update_data:
+        return PortfolioPublic.model_validate(portfolio)
+
+    changed_data = {
+        field: value
+        for field, value in update_data.items()
+        if getattr(portfolio, field) != value
+    }
+    if not changed_data:
+        return PortfolioPublic.model_validate(portfolio)
+
+    if "account_id" in changed_data:
+        account = _get_owned_account(session, current_user, changed_data["account_id"])
         if not account.is_active:
             raise HTTPException(
                 status_code=409,
                 detail="Cannot assign portfolio to inactive account",
             )
 
-    portfolio.sqlmodel_update({**update_data, "updated_at": get_datetime_utc()})
+    portfolio.sqlmodel_update({**changed_data, "updated_at": get_datetime_utc()})
     session.add(portfolio)
     session.commit()
     session.refresh(portfolio)

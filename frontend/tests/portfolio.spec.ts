@@ -68,6 +68,7 @@ async function mockPortfolioApis(
   options?: {
     accounts?: AccountRecord[]
     portfolios?: PortfolioRecord[]
+    onSyncRequest?: (requestUrl: URL) => void
   },
 ) {
   const accounts = options?.accounts ?? [buildAccount()]
@@ -219,6 +220,22 @@ async function mockPortfolioApis(
         asset_class_count: 2,
         anomaly_count: 1,
         stale: false,
+      }),
+    })
+  })
+
+  await page.route("**/api/v1/connectors/*/sync**", async (route) => {
+    options?.onSyncRequest?.(new URL(route.request().url()))
+    await route.fulfill({
+      contentType: "application/json",
+      status: 200,
+      body: JSON.stringify({
+        source: "demo-broker",
+        status: "ok",
+        snapshot_version: "20260411T143022Z",
+        synced_records: 3,
+        normalized_records: 2,
+        conflict_records: 1,
       }),
     })
   })
@@ -394,8 +411,15 @@ test.describe("Portfolio pages", () => {
       .toBe(true)
   })
 
-  test("Overview page shows core portfolio widgets", async ({ page }) => {
-    await mockPortfolioApis(page)
+  test("Overview page auto-syncs when exactly one active account exists", async ({
+    page,
+  }) => {
+    let syncedAccountId: string | null = null
+    await mockPortfolioApis(page, {
+      onSyncRequest: (requestUrl) => {
+        syncedAccountId = requestUrl.searchParams.get("account_id")
+      },
+    })
     await page.goto("/portfolio")
 
     await expect(page.getByRole("heading", { name: "投资组合" })).toBeVisible()
@@ -408,8 +432,37 @@ test.describe("Portfolio pages", () => {
 
     await page.getByRole("button", { name: "立即同步" }).click()
     await expect(
-      page.getByText("请先在账户管理中创建或选择账户，再执行同步。"),
+      page.getByText("同步完成：3 条原始记录，2 条标准化，1 条冲突"),
     ).toBeVisible()
+    await expect.poll(() => syncedAccountId).toBe(buildAccount().id)
+  })
+
+  test("Overview page prompts when multiple active accounts exist", async ({
+    page,
+  }) => {
+    let syncRequestCount = 0
+    await mockPortfolioApis(page, {
+      accounts: [
+        buildAccount(),
+        buildAccount({
+          id: "4c4c796b-bcf0-47d9-9a67-2107dca26902",
+          name: "招商银行现金账户",
+          account_mask: "****5678",
+          account_type: "bank",
+          institution_name: "China Merchants Bank",
+        }),
+      ],
+      onSyncRequest: () => {
+        syncRequestCount += 1
+      },
+    })
+    await page.goto("/portfolio")
+
+    await page.getByRole("button", { name: "立即同步" }).click()
+    await expect(
+      page.getByText("当前无法自动同步，请先前往账户管理确认唯一的活跃账户。"),
+    ).toBeVisible()
+    await expect.poll(() => syncRequestCount).toBe(0)
   })
 
   test("Conflicts page shows normalization conflict records", async ({
