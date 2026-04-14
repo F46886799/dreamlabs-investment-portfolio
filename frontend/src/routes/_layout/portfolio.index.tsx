@@ -16,7 +16,7 @@ export const Route = createFileRoute("/_layout/portfolio/")({
 })
 
 function PortfolioOverview() {
-  const { data: accounts } = useAccounts()
+  const { data: accounts, isLoading: isAccountsLoading } = useAccounts()
   const { data: portfolio, isLoading: isPortfolioLoading } = usePortfolioData()
   const { data: health, isLoading: isHealthLoading } = usePortfolioHealth()
   const { showErrorToast } = useCustomToast()
@@ -40,7 +40,11 @@ function PortfolioOverview() {
   return (
     <div className="flex flex-col gap-6">
       <div className="flex items-center justify-end">
-        <SyncButton loading={syncMutation.isPending} onSync={handleSync} />
+        <SyncButton
+          disabled={isAccountsLoading}
+          loading={syncMutation.isPending}
+          onSync={handleSync}
+        />
       </div>
 
       <StaleDataAlert stale={portfolio?.stale ?? false} />

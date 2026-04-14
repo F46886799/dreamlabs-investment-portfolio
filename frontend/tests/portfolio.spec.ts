@@ -67,6 +67,7 @@ async function mockPortfolioApis(
   page: Page,
   options?: {
     accounts?: AccountRecord[]
+    accountResponseDelayMs?: number
     portfolios?: PortfolioRecord[]
     onSyncRequest?: (requestUrl: URL) => void
   },
@@ -99,6 +100,10 @@ async function mockPortfolioApis(
       const data = includeInactive
         ? accounts
         : accounts.filter((account) => account.is_active)
+
+      if (options?.accountResponseDelayMs) {
+        await page.waitForTimeout(options.accountResponseDelayMs)
+      }
 
       await route.fulfill({
         contentType: "application/json",
@@ -431,6 +436,29 @@ test.describe("Portfolio pages", () => {
     await expect(page.getByRole("link", { name: "审计日志" })).toBeVisible()
 
     await page.getByRole("button", { name: "立即同步" }).click()
+    await expect(
+      page.getByText("同步完成：3 条原始记录，2 条标准化，1 条冲突"),
+    ).toBeVisible()
+    await expect.poll(() => syncedAccountId).toBe(buildAccount().id)
+  })
+
+  test("Overview page keeps sync disabled until accounts finish loading", async ({
+    page,
+  }) => {
+    let syncedAccountId: string | null = null
+    await mockPortfolioApis(page, {
+      accountResponseDelayMs: 1_000,
+      onSyncRequest: (requestUrl) => {
+        syncedAccountId = requestUrl.searchParams.get("account_id")
+      },
+    })
+    await page.goto("/portfolio")
+
+    const syncButton = page.getByRole("button", { name: "立即同步" })
+    await expect(syncButton).toBeDisabled()
+    await expect(syncButton).toBeEnabled()
+
+    await syncButton.click()
     await expect(
       page.getByText("同步完成：3 条原始记录，2 条标准化，1 条冲突"),
     ).toBeVisible()
