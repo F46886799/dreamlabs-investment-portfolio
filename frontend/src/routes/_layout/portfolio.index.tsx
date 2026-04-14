@@ -1,7 +1,9 @@
 import { createFileRoute } from "@tanstack/react-router"
+import { useEffect, useState } from "react"
 
 import { ConflictBadge } from "@/components/Portfolio/ConflictBadge"
 import { PortfolioDataTable } from "@/components/Portfolio/PortfolioDataTable"
+import { PortfolioFilters } from "@/components/Portfolio/PortfolioFilters"
 import { PortfolioMetricsCard } from "@/components/Portfolio/PortfolioMetricsCard"
 import { StaleDataAlert } from "@/components/Portfolio/StaleDataAlert"
 import { SyncButton } from "@/components/Portfolio/SyncButton"
@@ -9,6 +11,7 @@ import { useAccounts } from "@/hooks/useAccounts"
 import useCustomToast from "@/hooks/useCustomToast"
 import { usePortfolioData } from "@/hooks/usePortfolioData"
 import { usePortfolioHealth } from "@/hooks/usePortfolioHealth"
+import { usePortfolios } from "@/hooks/usePortfolios"
 import { useSyncConnector } from "@/hooks/useSyncConnector"
 
 export const Route = createFileRoute("/_layout/portfolio/")({
@@ -16,36 +19,73 @@ export const Route = createFileRoute("/_layout/portfolio/")({
 })
 
 function PortfolioOverview() {
+  const [accountId, setAccountId] = useState<string>()
+  const [portfolioId, setPortfolioId] = useState<string>()
   const { data: accounts, isLoading: isAccountsLoading } = useAccounts()
-  const { data: portfolio, isLoading: isPortfolioLoading } = usePortfolioData()
-  const { data: health, isLoading: isHealthLoading } = usePortfolioHealth()
+  const { data: portfolios, isLoading: isPortfoliosLoading } = usePortfolios({
+    accountId,
+  })
+  const { data: portfolio, isLoading: isPortfolioLoading } = usePortfolioData(
+    accountId,
+    portfolioId,
+  )
+  const { data: health, isLoading: isHealthLoading } = usePortfolioHealth(
+    accountId,
+    portfolioId,
+  )
   const { showErrorToast } = useCustomToast()
   const syncMutation = useSyncConnector()
+
+  useEffect(() => {
+    if (
+      portfolioId &&
+      !(portfolios?.data ?? []).some(
+        (portfolioRecord) => portfolioRecord.id === portfolioId,
+      )
+    ) {
+      setPortfolioId(undefined)
+    }
+  }, [portfolioId, portfolios?.data])
 
   const totalMarketValue = health?.total_market_value_usd ?? 0
   const positionsCount = health?.positions_count ?? 0
   const assetClassCount = health?.asset_class_count ?? 0
   const anomalyCount = health?.anomaly_count ?? 0
-  const handleSync = () => {
-    const activeAccounts = accounts?.data ?? []
 
-    if (activeAccounts.length === 1) {
-      syncMutation.mutate({ accountId: activeAccounts[0].id })
+  const handleAccountChange = (nextAccountId?: string) => {
+    setAccountId(nextAccountId)
+    setPortfolioId(undefined)
+  }
+
+  const handleSync = () => {
+    if (!accountId) {
+      showErrorToast("请先选择账户后再同步。")
       return
     }
 
-    showErrorToast("当前无法自动同步，请先前往账户管理确认唯一的活跃账户。")
+    syncMutation.mutate(accountId)
   }
 
   return (
     <div className="flex flex-col gap-6">
       <div className="flex items-center justify-end">
         <SyncButton
-          disabled={isAccountsLoading}
+          disabled={isAccountsLoading || !accountId}
           loading={syncMutation.isPending}
           onSync={handleSync}
         />
       </div>
+
+      <PortfolioFilters
+        accountId={accountId}
+        portfolioId={portfolioId}
+        accounts={accounts?.data ?? []}
+        portfolios={portfolios?.data ?? []}
+        isAccountsLoading={isAccountsLoading}
+        isPortfoliosLoading={isPortfoliosLoading}
+        onAccountChange={handleAccountChange}
+        onPortfolioChange={setPortfolioId}
+      />
 
       <StaleDataAlert stale={portfolio?.stale ?? false} />
 

@@ -3,23 +3,15 @@ import { useMutation, useQueryClient } from "@tanstack/react-query"
 import { PortfolioService } from "@/client"
 import useCustomToast from "@/hooks/useCustomToast"
 
-interface SyncConnectorVariables {
-  accountId: string
-  source?: string
-}
-
 export function useSyncConnector(defaultSource = "demo-broker") {
   const queryClient = useQueryClient()
   const { showErrorToast, showSuccessToast } = useCustomToast()
 
   return useMutation({
-    mutationFn: ({
-      accountId,
-      source = defaultSource,
-    }: SyncConnectorVariables) =>
+    mutationFn: (accountId: string) =>
       PortfolioService.syncConnectorPositions({
         accountId,
-        source,
+        source: defaultSource,
       }),
     onError: () => {
       showErrorToast("同步失败，请稍后重试")

@@ -27,6 +27,29 @@ type PortfolioRecord = {
   updated_at: string
 }
 
+type UnifiedPortfolioPosition = {
+  symbol: string
+  asset_class: string
+  quantity: number
+  market_value_usd: number
+}
+
+type UnifiedPortfolioResponse = {
+  snapshot_version: string
+  stale: boolean
+  data: UnifiedPortfolioPosition[]
+}
+
+type HealthReportResponse = {
+  week: string
+  generated_at: string
+  positions_count: number
+  total_market_value_usd: number
+  asset_class_count: number
+  anomaly_count: number
+  stale: boolean
+}
+
 const testUserId = "f335249f-4f95-40db-b986-17f811acc359"
 const updatedAt = "2026-04-12T09:00:00.000000+00:00"
 
@@ -69,7 +92,11 @@ async function mockPortfolioApis(
     accounts?: AccountRecord[]
     accountResponseDelayMs?: number
     portfolios?: PortfolioRecord[]
+    healthReportResponse?: (requestUrl: URL) => HealthReportResponse
+    onHealthReportRequest?: (requestUrl: URL) => void
     onSyncRequest?: (requestUrl: URL) => void
+    onUnifiedPortfolioRequest?: (requestUrl: URL) => void
+    unifiedPortfolioResponse?: (requestUrl: URL) => UnifiedPortfolioResponse
   },
 ) {
   const accounts = options?.accounts ?? [buildAccount()]
@@ -188,44 +215,54 @@ async function mockPortfolioApis(
     await route.fallback()
   })
 
-  await page.route("**/api/v1/portfolio/unified", async (route) => {
+  await page.route("**/api/v1/portfolio/unified**", async (route) => {
+    const requestUrl = new URL(route.request().url())
+    options?.onUnifiedPortfolioRequest?.(requestUrl)
+
     await route.fulfill({
       contentType: "application/json",
       status: 200,
-      body: JSON.stringify({
-        snapshot_version: "20260411T143022Z",
-        stale: false,
-        data: [
-          {
-            symbol: "AAPL",
-            asset_class: "equity",
-            quantity: 10,
-            market_value_usd: 1890,
-          },
-          {
-            symbol: "BTC",
-            asset_class: "digital_asset",
-            quantity: 0.1,
-            market_value_usd: 6200,
-          },
-        ],
-      }),
+      body: JSON.stringify(
+        options?.unifiedPortfolioResponse?.(requestUrl) ?? {
+          snapshot_version: "20260411T143022Z",
+          stale: false,
+          data: [
+            {
+              symbol: "AAPL",
+              asset_class: "equity",
+              quantity: 10,
+              market_value_usd: 1890,
+            },
+            {
+              symbol: "BTC",
+              asset_class: "digital_asset",
+              quantity: 0.1,
+              market_value_usd: 6200,
+            },
+          ],
+        },
+      ),
     })
   })
 
-  await page.route("**/api/v1/portfolio/health-report", async (route) => {
+  await page.route("**/api/v1/portfolio/health-report**", async (route) => {
+    const requestUrl = new URL(route.request().url())
+    options?.onHealthReportRequest?.(requestUrl)
+
     await route.fulfill({
       contentType: "application/json",
       status: 200,
-      body: JSON.stringify({
-        week: "2026-W15",
-        generated_at: "2026-04-11T14:30:22.000000+00:00",
-        positions_count: 2,
-        total_market_value_usd: 8090,
-        asset_class_count: 2,
-        anomaly_count: 1,
-        stale: false,
-      }),
+      body: JSON.stringify(
+        options?.healthReportResponse?.(requestUrl) ?? {
+          week: "2026-W15",
+          generated_at: "2026-04-11T14:30:22.000000+00:00",
+          positions_count: 2,
+          total_market_value_usd: 8090,
+          asset_class_count: 2,
+          anomaly_count: 1,
+          stale: false,
+        },
+      ),
     })
   })
 
@@ -416,9 +453,7 @@ test.describe("Portfolio pages", () => {
       .toBe(true)
   })
 
-  test("Overview page auto-syncs when exactly one active account exists", async ({
-    page,
-  }) => {
+  test("Overview requires account selection before sync", async ({ page }) => {
     let syncedAccountId: string | null = null
     await mockPortfolioApis(page, {
       onSyncRequest: (requestUrl) => {
@@ -428,14 +463,17 @@ test.describe("Portfolio pages", () => {
     await page.goto("/portfolio")
 
     await expect(page.getByRole("heading", { name: "投资组合" })).toBeVisible()
-    await expect(page.getByRole("button", { name: "立即同步" })).toBeVisible()
-    await expect(page.getByRole("heading", { name: "统一持仓" })).toBeVisible()
-    await expect(page.getByText("AAPL")).toBeVisible()
-    await expect(page.getByText("$1,890.00")).toBeVisible()
-    await expect(page.getByRole("link", { name: "冲突" })).toBeVisible()
-    await expect(page.getByRole("link", { name: "审计日志" })).toBeVisible()
+    const syncButton = page.getByRole("button", { name: "立即同步" })
+    await expect(syncButton).toBeDisabled()
+    await expect(page.getByRole("combobox", { name: "组合" })).toBeDisabled()
 
-    await page.getByRole("button", { name: "立即同步" }).click()
+    await page.getByRole("combobox", { name: "账户" }).click()
+    await page.getByRole("option", { name: buildAccount().name }).click()
+
+    await expect(syncButton).toBeEnabled()
+    await expect(page.getByRole("combobox", { name: "组合" })).toBeEnabled()
+
+    await syncButton.click()
     await expect(
       page.getByText("同步完成：3 条原始记录，2 条标准化，1 条冲突"),
     ).toBeVisible()
@@ -445,52 +483,189 @@ test.describe("Portfolio pages", () => {
   test("Overview page keeps sync disabled until accounts finish loading", async ({
     page,
   }) => {
-    let syncedAccountId: string | null = null
     await mockPortfolioApis(page, {
       accountResponseDelayMs: 1_000,
-      onSyncRequest: (requestUrl) => {
-        syncedAccountId = requestUrl.searchParams.get("account_id")
-      },
     })
     await page.goto("/portfolio")
 
     const syncButton = page.getByRole("button", { name: "立即同步" })
     await expect(syncButton).toBeDisabled()
+    await expect(page.getByRole("combobox", { name: "账户" })).toBeEnabled()
+    await page.getByRole("combobox", { name: "账户" }).click()
+    await page.getByRole("option", { name: buildAccount().name }).click()
     await expect(syncButton).toBeEnabled()
-
-    await syncButton.click()
-    await expect(
-      page.getByText("同步完成：3 条原始记录，2 条标准化，1 条冲突"),
-    ).toBeVisible()
-    await expect.poll(() => syncedAccountId).toBe(buildAccount().id)
   })
 
-  test("Overview page prompts when multiple active accounts exist", async ({
+  test("Overview page applies account and portfolio filters", async ({
     page,
   }) => {
-    let syncRequestCount = 0
+    const primaryAccount = buildAccount()
+    const secondaryAccount = buildAccount({
+      id: "4c4c796b-bcf0-47d9-9a67-2107dca26902",
+      name: "招商银行现金账户",
+      account_mask: "****5678",
+      account_type: "bank",
+      institution_name: "China Merchants Bank",
+    })
+    const primaryPortfolio = buildPortfolio()
+    const secondaryPortfolio = buildPortfolio({
+      id: "f8508649-cfc2-4cf1-a044-462cb7aa79b3",
+      name: "国内固收组合",
+      account_id: secondaryAccount.id,
+    })
+    const unifiedQueries: string[] = []
+    const healthQueries: string[] = []
+
     await mockPortfolioApis(page, {
-      accounts: [
-        buildAccount(),
-        buildAccount({
-          id: "4c4c796b-bcf0-47d9-9a67-2107dca26902",
-          name: "招商银行现金账户",
-          account_mask: "****5678",
-          account_type: "bank",
-          institution_name: "China Merchants Bank",
-        }),
-      ],
-      onSyncRequest: () => {
-        syncRequestCount += 1
+      accounts: [primaryAccount, secondaryAccount],
+      portfolios: [primaryPortfolio, secondaryPortfolio],
+      onHealthReportRequest: (requestUrl) => {
+        healthQueries.push(requestUrl.searchParams.toString())
+      },
+      onUnifiedPortfolioRequest: (requestUrl) => {
+        unifiedQueries.push(requestUrl.searchParams.toString())
+      },
+      unifiedPortfolioResponse: (requestUrl) => {
+        const accountId = requestUrl.searchParams.get("account_id")
+        const portfolioId = requestUrl.searchParams.get("portfolio_id")
+
+        if (
+          accountId === secondaryAccount.id &&
+          portfolioId === secondaryPortfolio.id
+        ) {
+          return {
+            snapshot_version: "20260411T143022Z",
+            stale: false,
+            data: [
+              {
+                symbol: "CASH",
+                asset_class: "cash",
+                quantity: 1,
+                market_value_usd: 2500,
+              },
+            ],
+          }
+        }
+
+        if (accountId === secondaryAccount.id) {
+          return {
+            snapshot_version: "20260411T143022Z",
+            stale: false,
+            data: [
+              {
+                symbol: "BND",
+                asset_class: "fixed_income",
+                quantity: 12,
+                market_value_usd: 4800,
+              },
+            ],
+          }
+        }
+
+        return {
+          snapshot_version: "20260411T143022Z",
+          stale: false,
+          data: [
+            {
+              symbol: "AAPL",
+              asset_class: "equity",
+              quantity: 10,
+              market_value_usd: 1890,
+            },
+          ],
+        }
+      },
+      healthReportResponse: (requestUrl) => {
+        const accountId = requestUrl.searchParams.get("account_id")
+        const portfolioId = requestUrl.searchParams.get("portfolio_id")
+
+        if (
+          accountId === secondaryAccount.id &&
+          portfolioId === secondaryPortfolio.id
+        ) {
+          return {
+            week: "2026-W15",
+            generated_at: "2026-04-11T14:30:22.000000+00:00",
+            positions_count: 1,
+            total_market_value_usd: 2500,
+            asset_class_count: 1,
+            anomaly_count: 0,
+            stale: false,
+          }
+        }
+
+        if (accountId === secondaryAccount.id) {
+          return {
+            week: "2026-W15",
+            generated_at: "2026-04-11T14:30:22.000000+00:00",
+            positions_count: 1,
+            total_market_value_usd: 4800,
+            asset_class_count: 1,
+            anomaly_count: 0,
+            stale: false,
+          }
+        }
+
+        return {
+          week: "2026-W15",
+          generated_at: "2026-04-11T14:30:22.000000+00:00",
+          positions_count: 1,
+          total_market_value_usd: 1890,
+          asset_class_count: 1,
+          anomaly_count: 1,
+          stale: false,
+        }
       },
     })
     await page.goto("/portfolio")
 
-    await page.getByRole("button", { name: "立即同步" }).click()
-    await expect(
-      page.getByText("当前无法自动同步，请先前往账户管理确认唯一的活跃账户。"),
-    ).toBeVisible()
-    await expect.poll(() => syncRequestCount).toBe(0)
+    await expect(page.getByText("AAPL")).toBeVisible()
+    await expect.poll(() => unifiedQueries.at(-1)).toBe("")
+    await expect.poll(() => healthQueries.at(-1)).toBe("")
+    await expect(page.getByRole("combobox", { name: "组合" })).toBeDisabled()
+
+    await page.getByRole("combobox", { name: "账户" }).click()
+    await page.getByRole("option", { name: secondaryAccount.name }).click()
+
+    await expect
+      .poll(() => unifiedQueries.at(-1))
+      .toContain(`account_id=${secondaryAccount.id}`)
+    await expect
+      .poll(() => healthQueries.at(-1))
+      .toContain(`account_id=${secondaryAccount.id}`)
+    await expect(page.getByText("BND")).toBeVisible()
+    await expect(page.getByText("AAPL")).not.toBeVisible()
+    await expect(page.getByRole("combobox", { name: "组合" })).toBeEnabled()
+
+    await page.getByRole("combobox", { name: "组合" }).click()
+    await page.getByRole("option", { name: secondaryPortfolio.name }).click()
+
+    await expect
+      .poll(() => unifiedQueries.at(-1))
+      .toContain(`portfolio_id=${secondaryPortfolio.id}`)
+    await expect
+      .poll(() => healthQueries.at(-1))
+      .toContain(`portfolio_id=${secondaryPortfolio.id}`)
+    await expect(page.getByRole("row", { name: /CASH/ })).toBeVisible()
+    await expect(page.getByRole("row", { name: /BND/ })).not.toBeVisible()
+
+    await page.getByRole("combobox", { name: "账户" }).click()
+    await page.getByRole("option", { name: primaryAccount.name }).click()
+
+    await expect
+      .poll(() => unifiedQueries.at(-1))
+      .toContain(`account_id=${primaryAccount.id}`)
+    await expect
+      .poll(() => unifiedQueries.at(-1) ?? "")
+      .not.toContain("portfolio_id=")
+    await expect
+      .poll(() => healthQueries.at(-1))
+      .toContain(`account_id=${primaryAccount.id}`)
+    await expect
+      .poll(() => healthQueries.at(-1) ?? "")
+      .not.toContain("portfolio_id=")
+    await expect(page.getByText("AAPL")).toBeVisible()
+    await expect(page.getByRole("row", { name: /CASH/ })).not.toBeVisible()
   })
 
   test("Conflicts page shows normalization conflict records", async ({
