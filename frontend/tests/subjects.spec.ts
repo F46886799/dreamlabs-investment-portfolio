@@ -1,163 +1,210 @@
-import { expect, test } from "@playwright/test";
+import { expect, type Page, test } from "@playwright/test"
 
-import { firstSuperuser, firstSuperuserPassword } from "./config.ts";
-import { createUser } from "./utils/privateApi";
-import { randomEmail, randomPassword } from "./utils/random";
-import { logInUser } from "./utils/user";
+import { firstSuperuser, firstSuperuserPassword } from "./config.ts"
+import { createUser } from "./utils/privateApi"
+import { randomEmail, randomPassword } from "./utils/random"
+import { logInUser } from "./utils/user"
 
 const randomPersonName = () =>
-  `自动化人员-${Date.now()}-${Math.floor(Math.random() * 1000)}`;
+  `自动化人员-${Date.now()}-${Math.floor(Math.random() * 1000)}`
 
 const randomOrganizationName = () =>
-  `自动化机构-${Date.now()}-${Math.floor(Math.random() * 1000)}`;
+  `自动化机构-${Date.now()}-${Math.floor(Math.random() * 1000)}`
+
+const emptySubjectsResponse = { data: [], count: 0 }
+
+async function mockEmptySubjects(page: Page) {
+  await page.route("**/api/v1/people/**", async (route) => {
+    await route.fulfill({
+      contentType: "application/json",
+      json: emptySubjectsResponse,
+      status: 200,
+    })
+  })
+
+  await page.route("**/api/v1/organizations/**", async (route) => {
+    await route.fulfill({
+      contentType: "application/json",
+      json: emptySubjectsResponse,
+      status: 200,
+    })
+  })
+}
 
 test.describe("Subjects workspace access control", () => {
-  test.use({ storageState: { cookies: [], origins: [] } });
+  test.use({ storageState: { cookies: [], origins: [] } })
 
   test("Superuser can open /subjects and see heading + tabs", async ({
     page,
   }) => {
-    await logInUser(page, firstSuperuser, firstSuperuserPassword);
-    await expect(page.getByRole("link", { name: "主体维护" })).toBeVisible();
+    await logInUser(page, firstSuperuser, firstSuperuserPassword)
+    await expect(page.getByRole("link", { name: "主体维护" })).toBeVisible()
 
-    await page.goto("/subjects");
+    await page.goto("/subjects")
 
-    await expect(page.getByRole("heading", { name: "主体维护" })).toBeVisible();
-    await expect(page.getByRole("tab", { name: "人员" })).toBeVisible();
-    await expect(page.getByRole("tab", { name: "机构" })).toBeVisible();
-    await expect(page.getByRole("button", { name: "新增人员" })).toBeVisible();
-  });
+    await expect(page.getByRole("heading", { name: "主体维护" })).toBeVisible()
+    await expect(page.getByRole("tab", { name: "人员" })).toBeVisible()
+    await expect(page.getByRole("tab", { name: "机构" })).toBeVisible()
+    await expect(page.getByRole("button", { name: "新增人员" })).toBeVisible()
+  })
 
   test("Non-superuser cannot access /subjects", async ({ page }) => {
-    const email = randomEmail();
-    const password = randomPassword();
+    const email = randomEmail()
+    const password = randomPassword()
 
-    await createUser({ email, password });
-    await logInUser(page, email, password);
-    await expect(
-      page.getByRole("link", { name: "主体维护" }),
-    ).not.toBeVisible();
+    await createUser({ email, password })
+    await logInUser(page, email, password)
+    await expect(page.getByRole("link", { name: "主体维护" })).not.toBeVisible()
 
-    await page.goto("/subjects");
+    await page.goto("/subjects")
 
-    await expect(page).not.toHaveURL(/\/subjects\/?$/);
+    await expect(page).not.toHaveURL(/\/subjects\/?$/)
     await expect(
       page.getByRole("heading", { name: "主体维护" }),
-    ).not.toBeVisible();
-  });
+    ).not.toBeVisible()
+  })
 
   test("Superuser can create, edit, and delete a person", async ({ page }) => {
-    const createdName = randomPersonName();
-    const updatedName = randomPersonName();
+    const createdName = randomPersonName()
+    const updatedName = randomPersonName()
 
-    await logInUser(page, firstSuperuser, firstSuperuserPassword);
-    await page.goto("/subjects");
+    await logInUser(page, firstSuperuser, firstSuperuserPassword)
+    await page.goto("/subjects")
 
-    await page.getByRole("button", { name: "新增人员" }).click();
-    await page.getByLabel("人员类型").click();
-    await page.getByRole("option", { name: "客户联系人" }).click();
-    await page.getByLabel("姓名").fill(createdName);
-    await page.getByLabel("别名").fill("初始别名");
-    await page.getByLabel("备注").fill("初始备注");
-    await page.getByRole("button", { name: "保存" }).click();
+    await page.getByRole("button", { name: "新增人员" }).click()
+    await page.getByLabel("人员类型").click()
+    await page.getByRole("option", { name: "客户联系人" }).click()
+    await page.getByLabel("姓名").fill(createdName)
+    await page.getByLabel("别名").fill("初始别名")
+    await page.getByLabel("备注").fill("初始备注")
+    await page.getByRole("button", { name: "保存" }).click()
 
-    await expect(page.getByText("人员创建成功")).toBeVisible();
-    await expect(page.getByRole("dialog")).not.toBeVisible();
+    await expect(page.getByText("人员创建成功")).toBeVisible()
+    await expect(page.getByRole("dialog")).not.toBeVisible()
 
-    const createdRow = page.getByRole("row").filter({ hasText: createdName });
-    await expect(createdRow).toBeVisible();
+    const createdRow = page.getByRole("row").filter({ hasText: createdName })
+    await expect(createdRow).toBeVisible()
 
     await createdRow
       .getByRole("button", { name: `操作 ${createdName}` })
-      .click();
-    await page.getByRole("menuitem", { name: "编辑人员" }).click();
-    await page.getByLabel("人员类型").click();
-    await page.getByRole("option", { name: "外部顾问" }).click();
-    await page.getByLabel("姓名").fill(updatedName);
-    await page.getByLabel("别名").fill("更新别名");
-    await page.getByLabel("备注").fill("更新备注");
-    await page.getByRole("button", { name: "保存" }).click();
+      .click()
+    await page.getByRole("menuitem", { name: "编辑人员" }).click()
+    await page.getByLabel("人员类型").click()
+    await page.getByRole("option", { name: "外部顾问" }).click()
+    await page.getByLabel("姓名").fill(updatedName)
+    await page.getByLabel("别名").fill("更新别名")
+    await page.getByLabel("备注").fill("更新备注")
+    await page.getByRole("button", { name: "保存" }).click()
 
-    await expect(page.getByText("人员更新成功")).toBeVisible();
+    await expect(page.getByText("人员更新成功")).toBeVisible()
 
-    const updatedRow = page.getByRole("row").filter({ hasText: updatedName });
-    await expect(updatedRow).toBeVisible();
+    const updatedRow = page.getByRole("row").filter({ hasText: updatedName })
+    await expect(updatedRow).toBeVisible()
 
     await updatedRow
       .getByRole("button", { name: `操作 ${updatedName}` })
-      .click();
-    await page.getByRole("menuitem", { name: "删除人员" }).click();
-    await page.getByRole("button", { name: "删除" }).click();
+      .click()
+    await page.getByRole("menuitem", { name: "删除人员" }).click()
+    await page.getByRole("button", { name: "删除" }).click()
 
-    await expect(page.getByText("人员已成功删除")).toBeVisible();
+    await expect(page.getByText("人员已成功删除")).toBeVisible()
     await expect(
       page.getByRole("row").filter({ hasText: updatedName }),
-    ).not.toBeVisible();
-  });
+    ).not.toBeVisible()
+  })
+
+  test("Superuser sees tab-specific empty-state guidance when subjects are empty", async ({
+    page,
+  }) => {
+    await logInUser(page, firstSuperuser, firstSuperuserPassword)
+    await mockEmptySubjects(page)
+
+    await page.goto("/subjects")
+
+    await expect(page.getByText("暂无人员主数据")).toBeVisible()
+    await expect(
+      page.getByText(
+        "点击右上角“新增人员”录入内部成员、客户联系人或外部顾问。",
+      ),
+    ).toBeVisible()
+    await expect(page.getByRole("button", { name: "新增人员" })).toBeVisible()
+
+    await page.getByRole("tab", { name: "机构" }).click()
+
+    await expect(page.getByText("暂无机构主数据")).toBeVisible()
+    await expect(
+      page.getByText("点击右上角“新增机构”录入机构、载体或服务提供方。"),
+    ).toBeVisible()
+    await expect(page.getByRole("button", { name: "新增机构" })).toBeVisible()
+  })
 
   test("Superuser can create, edit, and delete an organization", async ({
     page,
   }) => {
-    const createdName = randomOrganizationName();
-    const updatedName = randomOrganizationName();
+    const createdName = randomOrganizationName()
+    const updatedName = randomOrganizationName()
 
-    await logInUser(page, firstSuperuser, firstSuperuserPassword);
-    await page.goto("/subjects");
-    await page.getByRole("tab", { name: "机构" }).click();
+    await logInUser(page, firstSuperuser, firstSuperuserPassword)
+    await page.goto("/subjects")
+    await page.getByRole("tab", { name: "机构" }).click()
 
-    await expect(page.getByRole("button", { name: "新增机构" })).toBeVisible();
+    await expect(page.getByRole("button", { name: "新增机构" })).toBeVisible()
 
-    await page.getByRole("button", { name: "新增机构" }).click();
-    await page.getByLabel("机构类型").click();
-    await page.getByRole("option", { name: "服务提供方" }).click();
-    await page.getByLabel("机构名称").fill(createdName);
-    await page.getByLabel("别名").fill("初始机构别名");
-    await page.getByLabel("备注").fill("初始机构备注");
-    await page.getByRole("button", { name: "保存" }).click();
+    await page.getByRole("button", { name: "新增机构" }).click()
+    await page.getByLabel("机构类型").click()
+    await page.getByRole("option", { name: "服务提供方" }).click()
+    await page.getByLabel("机构名称").fill(createdName)
+    await page.getByLabel("别名").fill("初始机构别名")
+    await page.getByLabel("备注").fill("初始机构备注")
+    await page.getByRole("button", { name: "保存" }).click()
 
-    await expect(page.getByText("机构创建成功")).toBeVisible();
-    await expect(page.getByRole("dialog")).not.toBeVisible();
+    await expect(page.getByText("机构创建成功")).toBeVisible()
+    await expect(page.getByRole("dialog")).not.toBeVisible()
 
-    const createdRow = page.getByRole("row").filter({ hasText: createdName });
-    await expect(createdRow).toBeVisible();
+    const createdRow = page.getByRole("row").filter({ hasText: createdName })
+    await expect(createdRow).toBeVisible()
 
-    await page.getByRole("tab", { name: "人员" }).click();
-    await expect(page.getByRole("button", { name: "新增人员" })).toBeVisible();
-    await expect(page.getByRole("button", { name: "新增机构" })).not.toBeVisible();
+    await page.getByRole("tab", { name: "人员" }).click()
+    await expect(page.getByRole("button", { name: "新增人员" })).toBeVisible()
+    await expect(
+      page.getByRole("button", { name: "新增机构" }),
+    ).not.toBeVisible()
     await expect(
       page.getByRole("row").filter({ hasText: createdName }),
-    ).not.toBeVisible();
+    ).not.toBeVisible()
 
-    await page.getByRole("tab", { name: "机构" }).click();
-    await expect(page.getByRole("button", { name: "新增机构" })).toBeVisible();
-    await expect(page.getByRole("button", { name: "新增人员" })).not.toBeVisible();
-    await expect(createdRow).toBeVisible();
+    await page.getByRole("tab", { name: "机构" }).click()
+    await expect(page.getByRole("button", { name: "新增机构" })).toBeVisible()
+    await expect(
+      page.getByRole("button", { name: "新增人员" }),
+    ).not.toBeVisible()
+    await expect(createdRow).toBeVisible()
 
     await createdRow
       .getByRole("button", { name: `操作 ${createdName}` })
-      .click();
-    await page.getByRole("menuitem", { name: "编辑机构" }).click();
-    await page.getByLabel("机构类型").click();
-    await page.getByRole("option", { name: "券商/银行" }).click();
-    await page.getByLabel("机构名称").fill(updatedName);
-    await page.getByLabel("别名").fill("更新机构别名");
-    await page.getByLabel("备注").fill("更新机构备注");
-    await page.getByRole("button", { name: "保存" }).click();
+      .click()
+    await page.getByRole("menuitem", { name: "编辑机构" }).click()
+    await page.getByLabel("机构类型").click()
+    await page.getByRole("option", { name: "券商/银行" }).click()
+    await page.getByLabel("机构名称").fill(updatedName)
+    await page.getByLabel("别名").fill("更新机构别名")
+    await page.getByLabel("备注").fill("更新机构备注")
+    await page.getByRole("button", { name: "保存" }).click()
 
-    await expect(page.getByText("机构更新成功")).toBeVisible();
+    await expect(page.getByText("机构更新成功")).toBeVisible()
 
-    const updatedRow = page.getByRole("row").filter({ hasText: updatedName });
-    await expect(updatedRow).toBeVisible();
+    const updatedRow = page.getByRole("row").filter({ hasText: updatedName })
+    await expect(updatedRow).toBeVisible()
 
     await updatedRow
       .getByRole("button", { name: `操作 ${updatedName}` })
-      .click();
-    await page.getByRole("menuitem", { name: "删除机构" }).click();
-    await page.getByRole("button", { name: "删除" }).click();
+      .click()
+    await page.getByRole("menuitem", { name: "删除机构" }).click()
+    await page.getByRole("button", { name: "删除" }).click()
 
-    await expect(page.getByText("机构已成功删除")).toBeVisible();
+    await expect(page.getByText("机构已成功删除")).toBeVisible()
     await expect(
       page.getByRole("row").filter({ hasText: updatedName }),
-    ).not.toBeVisible();
-  });
-});
+    ).not.toBeVisible()
+  })
+})
