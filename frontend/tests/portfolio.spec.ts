@@ -320,6 +320,77 @@ test.describe("Portfolio pages", () => {
     await expect(page.getByRole("button", { name: "启用" })).toBeVisible()
   })
 
+  test("Portfolios page applies account and inactive filters", async ({
+    page,
+  }) => {
+    const primaryAccount = buildAccount()
+    const secondaryAccount = buildAccount({
+      id: "4c4c796b-bcf0-47d9-9a67-2107dca26902",
+      name: "招商银行现金账户",
+      account_mask: "****5678",
+      account_type: "bank",
+      institution_name: "China Merchants Bank",
+    })
+    const portfolioQueries: string[] = []
+
+    page.on("request", (request) => {
+      if (
+        request.method() === "GET" &&
+        request.url().includes("/api/v1/portfolios")
+      ) {
+        portfolioQueries.push(new URL(request.url()).searchParams.toString())
+      }
+    })
+
+    await mockPortfolioApis(page, {
+      accounts: [primaryAccount, secondaryAccount],
+      portfolios: [
+        buildPortfolio(),
+        buildPortfolio({
+          id: "031ec943-b5c7-4c95-8190-8ff39c9142b9",
+          name: "美元现金组合",
+          is_active: false,
+        }),
+        buildPortfolio({
+          id: "f8508649-cfc2-4cf1-a044-462cb7aa79b3",
+          name: "国内固收组合",
+          account_id: secondaryAccount.id,
+        }),
+      ],
+    })
+
+    await page.goto("/portfolios")
+
+    await expect(page.getByText("全球多资产组合")).toBeVisible()
+    await expect(page.getByText("国内固收组合")).toBeVisible()
+    await expect(page.getByText("美元现金组合")).toBeVisible()
+    await expect
+      .poll(() => portfolioQueries.at(-1))
+      .toBe("include_inactive=true")
+
+    const initialQueryCount = portfolioQueries.length
+    await page.getByRole("checkbox", { name: "显示停用组合" }).click()
+    await expect(page.getByText("美元现金组合")).not.toBeVisible()
+    await expect
+      .poll(() => portfolioQueries.length > initialQueryCount)
+      .toBe(true)
+
+    const toggleQueryCount = portfolioQueries.length
+    await page.getByLabel("账户筛选").click()
+    await page.getByRole("option", { name: "招商银行现金账户" }).click()
+
+    await expect(page.getByText("国内固收组合")).toBeVisible()
+    await expect(page.getByText("全球多资产组合")).not.toBeVisible()
+    await expect(page.getByText("美元现金组合")).not.toBeVisible()
+    await expect
+      .poll(() =>
+        portfolioQueries
+          .slice(toggleQueryCount)
+          .some((query) => query.includes(`account_id=${secondaryAccount.id}`)),
+      )
+      .toBe(true)
+  })
+
   test("Overview page shows core portfolio widgets", async ({ page }) => {
     await mockPortfolioApis(page)
     await page.goto("/portfolio")
