@@ -216,6 +216,11 @@ test.describe("Portfolio pages", () => {
     await expect(page.getByText("$1,890.00")).toBeVisible()
     await expect(page.getByRole("link", { name: "冲突" })).toBeVisible()
     await expect(page.getByRole("link", { name: "审计日志" })).toBeVisible()
+
+    await page.getByRole("button", { name: "立即同步" }).click()
+    await expect(
+      page.getByText("请先在账户管理中创建或选择账户，再执行同步。"),
+    ).toBeVisible()
   })
 
   test("Conflicts page shows normalization conflict records", async ({

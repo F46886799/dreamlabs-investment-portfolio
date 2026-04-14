@@ -1,6 +1,9 @@
 import { useMutation, useQueryClient } from "@tanstack/react-query"
 
-import { PortfolioService } from "@/client"
+import {
+  PortfolioService,
+  type PortfolioSyncConnectorPositionsData,
+} from "@/client"
 import useCustomToast from "@/hooks/useCustomToast"
 
 export function useSyncConnector(defaultSource = "demo-broker") {
@@ -8,11 +11,14 @@ export function useSyncConnector(defaultSource = "demo-broker") {
   const { showErrorToast, showSuccessToast } = useCustomToast()
 
   return useMutation({
-    mutationFn: (source?: string) =>
-      // Keep the existing overview sync behavior until explicit account selection is added.
+    mutationFn: ({
+      accountId,
+      source = defaultSource,
+    }: PortfolioSyncConnectorPositionsData) =>
       PortfolioService.syncConnectorPositions({
-        source: source ?? defaultSource,
-      } as never),
+        accountId,
+        source,
+      }),
     onError: () => {
       showErrorToast("同步失败，请稍后重试")
     },

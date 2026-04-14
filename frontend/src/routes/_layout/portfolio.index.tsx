@@ -5,9 +5,9 @@ import { PortfolioDataTable } from "@/components/Portfolio/PortfolioDataTable"
 import { PortfolioMetricsCard } from "@/components/Portfolio/PortfolioMetricsCard"
 import { StaleDataAlert } from "@/components/Portfolio/StaleDataAlert"
 import { SyncButton } from "@/components/Portfolio/SyncButton"
+import useCustomToast from "@/hooks/useCustomToast"
 import { usePortfolioData } from "@/hooks/usePortfolioData"
 import { usePortfolioHealth } from "@/hooks/usePortfolioHealth"
-import { useSyncConnector } from "@/hooks/useSyncConnector"
 
 export const Route = createFileRoute("/_layout/portfolio/")({
   component: PortfolioOverview,
@@ -16,20 +16,20 @@ export const Route = createFileRoute("/_layout/portfolio/")({
 function PortfolioOverview() {
   const { data: portfolio, isLoading: isPortfolioLoading } = usePortfolioData()
   const { data: health, isLoading: isHealthLoading } = usePortfolioHealth()
-  const syncMutation = useSyncConnector()
+  const { showErrorToast } = useCustomToast()
 
   const totalMarketValue = health?.total_market_value_usd ?? 0
   const positionsCount = health?.positions_count ?? 0
   const assetClassCount = health?.asset_class_count ?? 0
   const anomalyCount = health?.anomaly_count ?? 0
+  const handleSync = () => {
+    showErrorToast("请先在账户管理中创建或选择账户，再执行同步。")
+  }
 
   return (
     <div className="flex flex-col gap-6">
       <div className="flex items-center justify-end">
-        <SyncButton
-          loading={syncMutation.isPending}
-          onSync={() => syncMutation.mutate(undefined)}
-        />
+        <SyncButton loading={false} onSync={handleSync} />
       </div>
 
       <StaleDataAlert stale={portfolio?.stale ?? false} />

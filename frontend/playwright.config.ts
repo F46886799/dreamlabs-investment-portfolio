@@ -1,14 +1,6 @@
 import { defineConfig, devices } from '@playwright/test';
 import 'dotenv/config'
 
-const specArgs = process.argv.filter((arg) => arg.endsWith(".spec.ts"))
-const grepIndex = process.argv.findIndex((arg) => arg === "--grep")
-const grepValue = grepIndex >= 0 ? process.argv[grepIndex + 1] : undefined
-const runsMockedPortfolioManagementSpecs =
-  specArgs.length === 1 &&
-  specArgs[0] === "tests/portfolio.spec.ts" &&
-  grepValue === "Accounts page|Portfolios page"
-
 /**
  * Read environment variables from file.
  * https://github.com/motdotla/dotenv
@@ -46,9 +38,31 @@ export default defineConfig({
       name: 'chromium',
       use: {
         ...devices['Desktop Chrome'],
+      },
+      testMatch: [
+        /.*login\.spec\.ts/,
+        /.*sign-up\.spec\.ts/,
+        /.*recover-password\.spec\.ts/,
+        /.*reset-password\.spec\.ts/,
+        /.*portfolio\.spec\.ts/,
+      ],
+    },
+
+    {
+      name: 'chromium-authenticated',
+      use: {
+        ...devices['Desktop Chrome'],
         storageState: 'playwright/.auth/user.json',
       },
-      dependencies: runsMockedPortfolioManagementSpecs ? [] : ['setup'],
+      testIgnore: [
+        /.*\.setup\.ts/,
+        /.*login\.spec\.ts/,
+        /.*sign-up\.spec\.ts/,
+        /.*recover-password\.spec\.ts/,
+        /.*reset-password\.spec\.ts/,
+        /.*portfolio\.spec\.ts/,
+      ],
+      dependencies: ['setup'],
     },
 
     // {
