@@ -1,5 +1,11 @@
 # Release Notes
 
+## Asset instrument maintenance
+
+- Added superuser-only asset catalog management for stocks, ETFs, crypto, bonds, and cash-like instruments
+- Added Admin UI at `/admin/assets` for asset search, filtering, create, edit, and deactivate workflows
+- Reserved synchronization metadata fields for a future external market-data integration
+
 ## Latest Changes
 
 ### Refactors
