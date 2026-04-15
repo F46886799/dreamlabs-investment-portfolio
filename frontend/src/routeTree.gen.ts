@@ -20,8 +20,10 @@ import { Route as LayoutPortfolioRouteImport } from './routes/_layout/portfolio'
 import { Route as LayoutItemsRouteImport } from './routes/_layout/items'
 import { Route as LayoutAdminRouteImport } from './routes/_layout/admin'
 import { Route as LayoutPortfolioIndexRouteImport } from './routes/_layout/portfolio.index'
+import { Route as LayoutAdminIndexRouteImport } from './routes/_layout/admin.index'
 import { Route as LayoutPortfolioConflictsRouteImport } from './routes/_layout/portfolio.conflicts'
 import { Route as LayoutPortfolioAuditRouteImport } from './routes/_layout/portfolio.audit'
+import { Route as LayoutAdminAssetsRouteImport } from './routes/_layout/admin.assets'
 
 const SignupRoute = SignupRouteImport.update({
   id: '/signup',
@@ -77,6 +79,11 @@ const LayoutPortfolioIndexRoute = LayoutPortfolioIndexRouteImport.update({
   path: '/',
   getParentRoute: () => LayoutPortfolioRoute,
 } as any)
+const LayoutAdminIndexRoute = LayoutAdminIndexRouteImport.update({
+  id: '/',
+  path: '/',
+  getParentRoute: () => LayoutAdminRoute,
+} as any)
 const LayoutPortfolioConflictsRoute =
   LayoutPortfolioConflictsRouteImport.update({
     id: '/conflicts',
@@ -88,6 +95,11 @@ const LayoutPortfolioAuditRoute = LayoutPortfolioAuditRouteImport.update({
   path: '/audit',
   getParentRoute: () => LayoutPortfolioRoute,
 } as any)
+const LayoutAdminAssetsRoute = LayoutAdminAssetsRouteImport.update({
+  id: '/assets',
+  path: '/assets',
+  getParentRoute: () => LayoutAdminRoute,
+} as any)
 
 export interface FileRoutesByFullPath {
   '/': typeof LayoutIndexRoute
@@ -95,12 +107,14 @@ export interface FileRoutesByFullPath {
   '/recover-password': typeof RecoverPasswordRoute
   '/reset-password': typeof ResetPasswordRoute
   '/signup': typeof SignupRoute
-  '/admin': typeof LayoutAdminRoute
+  '/admin': typeof LayoutAdminRouteWithChildren
   '/items': typeof LayoutItemsRoute
   '/portfolio': typeof LayoutPortfolioRouteWithChildren
   '/settings': typeof LayoutSettingsRoute
+  '/admin/assets': typeof LayoutAdminAssetsRoute
   '/portfolio/audit': typeof LayoutPortfolioAuditRoute
   '/portfolio/conflicts': typeof LayoutPortfolioConflictsRoute
+  '/admin/': typeof LayoutAdminIndexRoute
   '/portfolio/': typeof LayoutPortfolioIndexRoute
 }
 export interface FileRoutesByTo {
@@ -108,12 +122,13 @@ export interface FileRoutesByTo {
   '/recover-password': typeof RecoverPasswordRoute
   '/reset-password': typeof ResetPasswordRoute
   '/signup': typeof SignupRoute
-  '/admin': typeof LayoutAdminRoute
   '/items': typeof LayoutItemsRoute
   '/settings': typeof LayoutSettingsRoute
   '/': typeof LayoutIndexRoute
+  '/admin/assets': typeof LayoutAdminAssetsRoute
   '/portfolio/audit': typeof LayoutPortfolioAuditRoute
   '/portfolio/conflicts': typeof LayoutPortfolioConflictsRoute
+  '/admin': typeof LayoutAdminIndexRoute
   '/portfolio': typeof LayoutPortfolioIndexRoute
 }
 export interface FileRoutesById {
@@ -123,13 +138,15 @@ export interface FileRoutesById {
   '/recover-password': typeof RecoverPasswordRoute
   '/reset-password': typeof ResetPasswordRoute
   '/signup': typeof SignupRoute
-  '/_layout/admin': typeof LayoutAdminRoute
+  '/_layout/admin': typeof LayoutAdminRouteWithChildren
   '/_layout/items': typeof LayoutItemsRoute
   '/_layout/portfolio': typeof LayoutPortfolioRouteWithChildren
   '/_layout/settings': typeof LayoutSettingsRoute
   '/_layout/': typeof LayoutIndexRoute
+  '/_layout/admin/assets': typeof LayoutAdminAssetsRoute
   '/_layout/portfolio/audit': typeof LayoutPortfolioAuditRoute
   '/_layout/portfolio/conflicts': typeof LayoutPortfolioConflictsRoute
+  '/_layout/admin/': typeof LayoutAdminIndexRoute
   '/_layout/portfolio/': typeof LayoutPortfolioIndexRoute
 }
 export interface FileRouteTypes {
@@ -144,8 +161,10 @@ export interface FileRouteTypes {
     | '/items'
     | '/portfolio'
     | '/settings'
+    | '/admin/assets'
     | '/portfolio/audit'
     | '/portfolio/conflicts'
+    | '/admin/'
     | '/portfolio/'
   fileRoutesByTo: FileRoutesByTo
   to:
@@ -153,12 +172,13 @@ export interface FileRouteTypes {
     | '/recover-password'
     | '/reset-password'
     | '/signup'
-    | '/admin'
     | '/items'
     | '/settings'
     | '/'
+    | '/admin/assets'
     | '/portfolio/audit'
     | '/portfolio/conflicts'
+    | '/admin'
     | '/portfolio'
   id:
     | '__root__'
@@ -172,8 +192,10 @@ export interface FileRouteTypes {
     | '/_layout/portfolio'
     | '/_layout/settings'
     | '/_layout/'
+    | '/_layout/admin/assets'
     | '/_layout/portfolio/audit'
     | '/_layout/portfolio/conflicts'
+    | '/_layout/admin/'
     | '/_layout/portfolio/'
   fileRoutesById: FileRoutesById
 }
@@ -264,6 +286,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof LayoutPortfolioIndexRouteImport
       parentRoute: typeof LayoutPortfolioRoute
     }
+    '/_layout/admin/': {
+      id: '/_layout/admin/'
+      path: '/'
+      fullPath: '/admin/'
+      preLoaderRoute: typeof LayoutAdminIndexRouteImport
+      parentRoute: typeof LayoutAdminRoute
+    }
     '/_layout/portfolio/conflicts': {
       id: '/_layout/portfolio/conflicts'
       path: '/conflicts'
@@ -278,8 +307,29 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof LayoutPortfolioAuditRouteImport
       parentRoute: typeof LayoutPortfolioRoute
     }
+    '/_layout/admin/assets': {
+      id: '/_layout/admin/assets'
+      path: '/assets'
+      fullPath: '/admin/assets'
+      preLoaderRoute: typeof LayoutAdminAssetsRouteImport
+      parentRoute: typeof LayoutAdminRoute
+    }
   }
 }
+
+interface LayoutAdminRouteChildren {
+  LayoutAdminAssetsRoute: typeof LayoutAdminAssetsRoute
+  LayoutAdminIndexRoute: typeof LayoutAdminIndexRoute
+}
+
+const LayoutAdminRouteChildren: LayoutAdminRouteChildren = {
+  LayoutAdminAssetsRoute: LayoutAdminAssetsRoute,
+  LayoutAdminIndexRoute: LayoutAdminIndexRoute,
+}
+
+const LayoutAdminRouteWithChildren = LayoutAdminRoute._addFileChildren(
+  LayoutAdminRouteChildren,
+)
 
 interface LayoutPortfolioRouteChildren {
   LayoutPortfolioAuditRoute: typeof LayoutPortfolioAuditRoute
@@ -298,7 +348,7 @@ const LayoutPortfolioRouteWithChildren = LayoutPortfolioRoute._addFileChildren(
 )
 
 interface LayoutRouteChildren {
-  LayoutAdminRoute: typeof LayoutAdminRoute
+  LayoutAdminRoute: typeof LayoutAdminRouteWithChildren
   LayoutItemsRoute: typeof LayoutItemsRoute
   LayoutPortfolioRoute: typeof LayoutPortfolioRouteWithChildren
   LayoutSettingsRoute: typeof LayoutSettingsRoute
@@ -306,7 +356,7 @@ interface LayoutRouteChildren {
 }
 
 const LayoutRouteChildren: LayoutRouteChildren = {
-  LayoutAdminRoute: LayoutAdminRoute,
+  LayoutAdminRoute: LayoutAdminRouteWithChildren,
   LayoutItemsRoute: LayoutItemsRoute,
   LayoutPortfolioRoute: LayoutPortfolioRouteWithChildren,
   LayoutSettingsRoute: LayoutSettingsRoute,
