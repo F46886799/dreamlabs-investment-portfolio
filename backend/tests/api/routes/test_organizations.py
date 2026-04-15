@@ -17,8 +17,6 @@ def clean_organizations(db: Session) -> None:
     yield
     db.execute(delete(Organization))
     db.commit()
-
-
 def test_create_organization(
     client: TestClient, superuser_token_headers: dict[str, str]
 ) -> None:

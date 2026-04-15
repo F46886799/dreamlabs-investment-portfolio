@@ -17,8 +17,6 @@ def clean_people(db: Session) -> None:
     yield
     db.execute(delete(Person))
     db.commit()
-
-
 def test_create_person(
     client: TestClient, superuser_token_headers: dict[str, str]
 ) -> None:
@@ -103,6 +101,7 @@ def test_read_people(
     assert content["count"] == 2
     assert len(content["data"]) == 1
     assert content["data"][0]["id"] == str(second_person.id)
+    assert content["data"][0]["id"] != str(first_person.id)
 
 
 def test_update_person(
