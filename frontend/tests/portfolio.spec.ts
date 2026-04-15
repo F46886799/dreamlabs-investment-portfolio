@@ -101,10 +101,14 @@ test.describe("Portfolio pages", () => {
     await expect(page.getByRole("link", { name: "审计日志" })).toBeVisible()
   })
 
-  test("Conflicts page shows normalization conflict records", async ({ page }) => {
+  test("Conflicts page shows normalization conflict records", async ({
+    page,
+  }) => {
     await page.goto("/portfolio/conflicts")
 
-    await expect(page.getByRole("heading", { name: "标准化冲突" })).toBeVisible()
+    await expect(
+      page.getByRole("heading", { name: "标准化冲突" }),
+    ).toBeVisible()
     await expect(page.getByText("冲突事件列表")).toBeVisible()
     await expect(
       page.getByText("770e8400-e29b-41d4-a716-446655440002"),

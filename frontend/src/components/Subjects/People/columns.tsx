@@ -1,23 +1,23 @@
-import type { ColumnDef } from "@tanstack/react-table";
-import { Check, Copy } from "lucide-react";
+import type { ColumnDef } from "@tanstack/react-table"
+import { Check, Copy } from "lucide-react"
 
-import type { PersonPublic, PersonType } from "@/client";
-import { Button } from "@/components/ui/button";
-import { useCopyToClipboard } from "@/hooks/useCopyToClipboard";
-import { cn } from "@/lib/utils";
+import type { PersonPublic, PersonType } from "@/client"
+import { Button } from "@/components/ui/button"
+import { useCopyToClipboard } from "@/hooks/useCopyToClipboard"
+import { cn } from "@/lib/utils"
 
-import PersonActionsMenu from "./PersonActionsMenu";
+import PersonActionsMenu from "./PersonActionsMenu"
 
 const personTypeLabels: Record<PersonType, string> = {
   internal_member: "内部成员",
   client_contact: "客户联系人",
   external_advisor: "外部顾问",
   other: "其他",
-};
+}
 
 function CopyId({ id }: { id: string }) {
-  const [copiedText, copy] = useCopyToClipboard();
-  const isCopied = copiedText === id;
+  const [copiedText, copy] = useCopyToClipboard()
+  const isCopied = copiedText === id
 
   return (
     <div className="group flex items-center gap-1.5">
@@ -36,7 +36,7 @@ function CopyId({ id }: { id: string }) {
         <span className="sr-only">复制 ID</span>
       </Button>
     </div>
-  );
+  )
 }
 
 export const columns: ColumnDef<PersonPublic>[] = [
@@ -54,7 +54,7 @@ export const columns: ColumnDef<PersonPublic>[] = [
     accessorKey: "alias",
     header: "别名",
     cell: ({ row }) => {
-      const alias = row.original.alias;
+      const alias = row.original.alias
       return (
         <span
           className={cn(
@@ -64,7 +64,7 @@ export const columns: ColumnDef<PersonPublic>[] = [
         >
           {alias || "未设置别名"}
         </span>
-      );
+      )
     },
   },
   {
@@ -80,7 +80,7 @@ export const columns: ColumnDef<PersonPublic>[] = [
     accessorKey: "notes",
     header: "备注",
     cell: ({ row }) => {
-      const notes = row.original.notes;
+      const notes = row.original.notes
       return (
         <span
           className={cn(
@@ -90,7 +90,7 @@ export const columns: ColumnDef<PersonPublic>[] = [
         >
           {notes || "暂无备注"}
         </span>
-      );
+      )
     },
   },
   {
@@ -102,4 +102,4 @@ export const columns: ColumnDef<PersonPublic>[] = [
       </div>
     ),
   },
-];
+]

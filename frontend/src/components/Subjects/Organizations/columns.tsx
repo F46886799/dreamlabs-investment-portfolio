@@ -1,15 +1,15 @@
-import type { ColumnDef } from "@tanstack/react-table";
-import type { OrganizationPublic, OrganizationType } from "@/client";
-import { cn } from "@/lib/utils";
+import type { ColumnDef } from "@tanstack/react-table"
+import type { OrganizationPublic, OrganizationType } from "@/client"
+import { cn } from "@/lib/utils"
 
-import OrganizationActionsMenu from "./OrganizationActionsMenu";
+import OrganizationActionsMenu from "./OrganizationActionsMenu"
 
 const organizationTypeLabels: Record<OrganizationType, string> = {
   fund_or_investment_vehicle: "基金/投资载体",
   broker_or_bank: "券商/银行",
   service_provider: "服务提供方",
   other: "其他",
-};
+}
 
 export const columns: ColumnDef<OrganizationPublic>[] = [
   {
@@ -30,7 +30,7 @@ export const columns: ColumnDef<OrganizationPublic>[] = [
     accessorKey: "alias",
     header: "别名",
     cell: ({ row }) => {
-      const alias = row.original.alias;
+      const alias = row.original.alias
       return (
         <span
           className={cn(
@@ -40,14 +40,14 @@ export const columns: ColumnDef<OrganizationPublic>[] = [
         >
           {alias || "未设置别名"}
         </span>
-      );
+      )
     },
   },
   {
     accessorKey: "notes",
     header: "备注",
     cell: ({ row }) => {
-      const notes = row.original.notes;
+      const notes = row.original.notes
       return (
         <span
           className={cn(
@@ -57,7 +57,7 @@ export const columns: ColumnDef<OrganizationPublic>[] = [
         >
           {notes || "暂无备注"}
         </span>
-      );
+      )
     },
   },
   {
@@ -69,4 +69,4 @@ export const columns: ColumnDef<OrganizationPublic>[] = [
       </div>
     ),
   },
-];
+]

@@ -129,8 +129,8 @@ export type PersonPublic = {
     alias?: (string | null);
     notes?: (string | null);
     id: string;
-    created_at?: (string | null);
-    updated_at?: (string | null);
+    created_at: string;
+    updated_at: string;
 };
 
 export type PersonType = 'internal_member' | 'client_contact' | 'external_advisor' | 'other';

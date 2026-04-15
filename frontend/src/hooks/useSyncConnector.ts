@@ -9,7 +9,9 @@ export function useSyncConnector(defaultSource = "demo-broker") {
 
   return useMutation({
     mutationFn: (source?: string) =>
-      PortfolioService.syncConnectorPositions({ source: source ?? defaultSource }),
+      PortfolioService.syncConnectorPositions({
+        source: source ?? defaultSource,
+      }),
     onError: () => {
       showErrorToast("同步失败，请稍后重试")
     },

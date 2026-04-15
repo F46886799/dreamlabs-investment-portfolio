@@ -1,23 +1,23 @@
-import { EllipsisVertical } from "lucide-react";
-import { useState } from "react";
+import { EllipsisVertical } from "lucide-react"
+import { useState } from "react"
 
-import type { PersonPublic } from "@/client";
-import { Button } from "@/components/ui/button";
+import type { PersonPublic } from "@/client"
+import { Button } from "@/components/ui/button"
 import {
   DropdownMenu,
   DropdownMenuContent,
   DropdownMenuTrigger,
-} from "@/components/ui/dropdown-menu";
+} from "@/components/ui/dropdown-menu"
 
-import DeletePerson from "./DeletePerson";
-import EditPerson from "./EditPerson";
+import DeletePerson from "./DeletePerson"
+import EditPerson from "./EditPerson"
 
 interface PersonActionsMenuProps {
-  person: PersonPublic;
+  person: PersonPublic
 }
 
 const PersonActionsMenu = ({ person }: PersonActionsMenuProps) => {
-  const [open, setOpen] = useState(false);
+  const [open, setOpen] = useState(false)
 
   return (
     <DropdownMenu open={open} onOpenChange={setOpen}>
@@ -31,7 +31,7 @@ const PersonActionsMenu = ({ person }: PersonActionsMenuProps) => {
         <DeletePerson person={person} onSuccess={() => setOpen(false)} />
       </DropdownMenuContent>
     </DropdownMenu>
-  );
-};
+  )
+}
 
-export default PersonActionsMenu;
+export default PersonActionsMenu

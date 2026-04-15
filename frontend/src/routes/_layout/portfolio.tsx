@@ -1,4 +1,4 @@
-import { Outlet, createFileRoute } from "@tanstack/react-router"
+import { createFileRoute, Outlet } from "@tanstack/react-router"
 
 import { PortfolioNavigation } from "@/components/Portfolio/PortfolioNavigation"
 

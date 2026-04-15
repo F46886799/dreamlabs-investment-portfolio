@@ -1,12 +1,12 @@
-import { zodResolver } from "@hookform/resolvers/zod";
-import { useMutation, useQueryClient } from "@tanstack/react-query";
-import { Plus } from "lucide-react";
-import { useState } from "react";
-import { useForm } from "react-hook-form";
-import { z } from "zod";
+import { zodResolver } from "@hookform/resolvers/zod"
+import { useMutation, useQueryClient } from "@tanstack/react-query"
+import { Plus } from "lucide-react"
+import { useState } from "react"
+import { useForm } from "react-hook-form"
+import { z } from "zod"
 
-import { type PersonCreate, type PersonType, PeopleService } from "@/client";
-import { Button } from "@/components/ui/button";
+import { PeopleService, type PersonCreate, type PersonType } from "@/client"
+import { Button } from "@/components/ui/button"
 import {
   Dialog,
   DialogClose,
@@ -16,7 +16,7 @@ import {
   DialogHeader,
   DialogTitle,
   DialogTrigger,
-} from "@/components/ui/dialog";
+} from "@/components/ui/dialog"
 import {
   Form,
   FormControl,
@@ -24,25 +24,25 @@ import {
   FormItem,
   FormLabel,
   FormMessage,
-} from "@/components/ui/form";
-import { Input } from "@/components/ui/input";
-import { LoadingButton } from "@/components/ui/loading-button";
+} from "@/components/ui/form"
+import { Input } from "@/components/ui/input"
+import { LoadingButton } from "@/components/ui/loading-button"
 import {
   Select,
   SelectContent,
   SelectItem,
   SelectTrigger,
   SelectValue,
-} from "@/components/ui/select";
-import useCustomToast from "@/hooks/useCustomToast";
-import { handleError } from "@/utils";
+} from "@/components/ui/select"
+import useCustomToast from "@/hooks/useCustomToast"
+import { handleError } from "@/utils"
 
 const personTypeOptions: Array<{ label: string; value: PersonType }> = [
   { label: "内部成员", value: "internal_member" },
   { label: "客户联系人", value: "client_contact" },
   { label: "外部顾问", value: "external_advisor" },
   { label: "其他", value: "other" },
-];
+]
 
 const formSchema = z.object({
   person_type: z.enum([
@@ -58,19 +58,19 @@ const formSchema = z.object({
     .max(255, { message: "姓名不能超过 255 个字符" }),
   alias: z.string().max(255, { message: "别名不能超过 255 个字符" }),
   notes: z.string().max(1000, { message: "备注不能超过 1000 个字符" }),
-});
+})
 
-type FormData = z.infer<typeof formSchema>;
+type FormData = z.infer<typeof formSchema>
 
 const normalizeOptionalText = (value: string) => {
-  const trimmed = value.trim();
-  return trimmed.length > 0 ? trimmed : null;
-};
+  const trimmed = value.trim()
+  return trimmed.length > 0 ? trimmed : null
+}
 
 const AddPerson = () => {
-  const [isOpen, setIsOpen] = useState(false);
-  const queryClient = useQueryClient();
-  const { showSuccessToast, showErrorToast } = useCustomToast();
+  const [isOpen, setIsOpen] = useState(false)
+  const queryClient = useQueryClient()
+  const { showSuccessToast, showErrorToast } = useCustomToast()
 
   const form = useForm<FormData>({
     resolver: zodResolver(formSchema),
@@ -82,21 +82,21 @@ const AddPerson = () => {
       alias: "",
       notes: "",
     },
-  });
+  })
 
   const mutation = useMutation({
     mutationFn: (data: PersonCreate) =>
       PeopleService.createPerson({ requestBody: data }),
     onSuccess: () => {
-      showSuccessToast("人员创建成功");
-      form.reset();
-      setIsOpen(false);
+      showSuccessToast("人员创建成功")
+      form.reset()
+      setIsOpen(false)
     },
     onError: handleError.bind(showErrorToast),
     onSettled: () => {
-      queryClient.invalidateQueries({ queryKey: ["people"] });
+      queryClient.invalidateQueries({ queryKey: ["people"] })
     },
-  });
+  })
 
   const onSubmit = (data: FormData) => {
     mutation.mutate({
@@ -104,8 +104,8 @@ const AddPerson = () => {
       name: data.name.trim(),
       alias: normalizeOptionalText(data.alias),
       notes: normalizeOptionalText(data.notes),
-    });
-  };
+    })
+  }
 
   return (
     <Dialog open={isOpen} onOpenChange={setIsOpen}>
@@ -218,7 +218,7 @@ const AddPerson = () => {
         </Form>
       </DialogContent>
     </Dialog>
-  );
-};
+  )
+}
 
-export default AddPerson;
+export default AddPerson

@@ -136,11 +136,11 @@ class PersonUpdate(SQLModel):
 
 class Person(PersonBase, table=True):
     id: uuid.UUID = Field(default_factory=uuid.uuid4, primary_key=True)
-    created_at: datetime | None = Field(
+    created_at: datetime = Field(
         default_factory=get_datetime_utc,
         sa_type=DateTime(timezone=True),  # type: ignore
     )
-    updated_at: datetime | None = Field(
+    updated_at: datetime = Field(
         default_factory=get_datetime_utc,
         sa_type=DateTime(timezone=True),  # type: ignore
     )
@@ -148,8 +148,8 @@ class Person(PersonBase, table=True):
 
 class PersonPublic(PersonBase):
     id: uuid.UUID
-    created_at: datetime | None = None
-    updated_at: datetime | None = None
+    created_at: datetime
+    updated_at: datetime
 
 
 class PeoplePublic(SQLModel):

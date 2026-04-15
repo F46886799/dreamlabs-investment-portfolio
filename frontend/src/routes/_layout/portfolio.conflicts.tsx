@@ -1,9 +1,9 @@
-import type { ColumnDef } from "@tanstack/react-table"
 import { createFileRoute } from "@tanstack/react-router"
+import type { ColumnDef } from "@tanstack/react-table"
 
 import type { AuditEventPublic } from "@/client"
-import { ConflictBadge } from "@/components/Portfolio/ConflictBadge"
 import { DataTable } from "@/components/Common/DataTable"
+import { ConflictBadge } from "@/components/Portfolio/ConflictBadge"
 import { useAuditEvents } from "@/hooks/useAuditEvents"
 
 const conflictColumns: ColumnDef<AuditEventPublic>[] = [
@@ -50,8 +50,9 @@ export const Route = createFileRoute("/_layout/portfolio/conflicts")({
 function PortfolioConflicts() {
   const { data, isLoading } = useAuditEvents()
   const conflicts =
-    data?.data.filter((event) => event.event_type === "normalization_conflict") ??
-    []
+    data?.data.filter(
+      (event) => event.event_type === "normalization_conflict",
+    ) ?? []
 
   return (
     <div className="flex flex-col gap-6">

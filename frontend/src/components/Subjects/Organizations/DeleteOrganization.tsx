@@ -1,11 +1,11 @@
-import { useMutation, useQueryClient } from "@tanstack/react-query";
-import { Trash2 } from "lucide-react";
-import { useState } from "react";
-import { useForm } from "react-hook-form";
+import { useMutation, useQueryClient } from "@tanstack/react-query"
+import { Trash2 } from "lucide-react"
+import { useState } from "react"
+import { useForm } from "react-hook-form"
 
-import type { OrganizationPublic } from "@/client";
-import { OrganizationsService } from "@/client";
-import { Button } from "@/components/ui/button";
+import type { OrganizationPublic } from "@/client"
+import { OrganizationsService } from "@/client"
+import { Button } from "@/components/ui/button"
 import {
   Dialog,
   DialogClose,
@@ -14,49 +14,49 @@ import {
   DialogFooter,
   DialogHeader,
   DialogTitle,
-} from "@/components/ui/dialog";
-import { DropdownMenuItem } from "@/components/ui/dropdown-menu";
-import { LoadingButton } from "@/components/ui/loading-button";
-import useCustomToast from "@/hooks/useCustomToast";
-import { handleError } from "@/utils";
+} from "@/components/ui/dialog"
+import { DropdownMenuItem } from "@/components/ui/dropdown-menu"
+import { LoadingButton } from "@/components/ui/loading-button"
+import useCustomToast from "@/hooks/useCustomToast"
+import { handleError } from "@/utils"
 
 interface DeleteOrganizationProps {
-  onSuccess: () => void;
-  organization: OrganizationPublic;
+  onSuccess: () => void
+  organization: OrganizationPublic
 }
 
 const DeleteOrganization = ({
   onSuccess,
   organization,
 }: DeleteOrganizationProps) => {
-  const [isOpen, setIsOpen] = useState(false);
-  const queryClient = useQueryClient();
-  const { showSuccessToast, showErrorToast } = useCustomToast();
-  const { handleSubmit } = useForm();
+  const [isOpen, setIsOpen] = useState(false)
+  const queryClient = useQueryClient()
+  const { showSuccessToast, showErrorToast } = useCustomToast()
+  const { handleSubmit } = useForm()
 
   const mutation = useMutation({
     mutationFn: (organizationId: string) =>
       OrganizationsService.deleteOrganization({ organizationId }),
     onSuccess: () => {
-      showSuccessToast("机构已成功删除");
-      setIsOpen(false);
-      onSuccess();
+      showSuccessToast("机构已成功删除")
+      setIsOpen(false)
+      onSuccess()
     },
     onError: handleError.bind(showErrorToast),
     onSettled: () => {
-      queryClient.invalidateQueries({ queryKey: ["organizations"] });
+      queryClient.invalidateQueries({ queryKey: ["organizations"] })
     },
-  });
+  })
 
   const onSubmit = async () => {
-    mutation.mutate(organization.id);
-  };
+    mutation.mutate(organization.id)
+  }
 
   return (
     <Dialog
       open={isOpen}
       onOpenChange={(open) => {
-        setIsOpen(open);
+        setIsOpen(open)
       }}
     >
       <DropdownMenuItem
@@ -72,7 +72,8 @@ const DeleteOrganization = ({
           <DialogHeader>
             <DialogTitle>删除机构</DialogTitle>
             <DialogDescription>
-              将永久删除“{organization.name}”的机构主数据，且无法撤销。确认继续吗？
+              将永久删除“{organization.name}
+              ”的机构主数据，且无法撤销。确认继续吗？
             </DialogDescription>
           </DialogHeader>
 
@@ -97,7 +98,7 @@ const DeleteOrganization = ({
         </form>
       </DialogContent>
     </Dialog>
-  );
-};
+  )
+}
 
-export default DeleteOrganization;
+export default DeleteOrganization

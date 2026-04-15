@@ -1,25 +1,25 @@
-import { EllipsisVertical } from "lucide-react";
-import { useState } from "react";
+import { EllipsisVertical } from "lucide-react"
+import { useState } from "react"
 
-import type { OrganizationPublic } from "@/client";
-import { Button } from "@/components/ui/button";
+import type { OrganizationPublic } from "@/client"
+import { Button } from "@/components/ui/button"
 import {
   DropdownMenu,
   DropdownMenuContent,
   DropdownMenuTrigger,
-} from "@/components/ui/dropdown-menu";
+} from "@/components/ui/dropdown-menu"
 
-import DeleteOrganization from "./DeleteOrganization";
-import EditOrganization from "./EditOrganization";
+import DeleteOrganization from "./DeleteOrganization"
+import EditOrganization from "./EditOrganization"
 
 interface OrganizationActionsMenuProps {
-  organization: OrganizationPublic;
+  organization: OrganizationPublic
 }
 
 const OrganizationActionsMenu = ({
   organization,
 }: OrganizationActionsMenuProps) => {
-  const [open, setOpen] = useState(false);
+  const [open, setOpen] = useState(false)
 
   return (
     <DropdownMenu open={open} onOpenChange={setOpen}>
@@ -43,7 +43,7 @@ const OrganizationActionsMenu = ({
         />
       </DropdownMenuContent>
     </DropdownMenu>
-  );
-};
+  )
+}
 
-export default OrganizationActionsMenu;
+export default OrganizationActionsMenu

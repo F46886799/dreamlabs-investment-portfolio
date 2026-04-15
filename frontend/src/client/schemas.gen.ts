@@ -656,32 +656,18 @@ export const PersonPublicSchema = {
             title: 'Id'
         },
         created_at: {
-            anyOf: [
-                {
-                    type: 'string',
-                    format: 'date-time'
-                },
-                {
-                    type: 'null'
-                }
-            ],
+            type: 'string',
+            format: 'date-time',
             title: 'Created At'
         },
         updated_at: {
-            anyOf: [
-                {
-                    type: 'string',
-                    format: 'date-time'
-                },
-                {
-                    type: 'null'
-                }
-            ],
+            type: 'string',
+            format: 'date-time',
             title: 'Updated At'
         }
     },
     type: 'object',
-    required: ['person_type', 'name', 'id'],
+    required: ['person_type', 'name', 'id', 'created_at', 'updated_at'],
     title: 'PersonPublic'
 } as const;
 

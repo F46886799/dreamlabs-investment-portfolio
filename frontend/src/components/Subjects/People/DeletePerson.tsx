@@ -1,11 +1,11 @@
-import { useMutation, useQueryClient } from "@tanstack/react-query";
-import { Trash2 } from "lucide-react";
-import { useState } from "react";
-import { useForm } from "react-hook-form";
+import { useMutation, useQueryClient } from "@tanstack/react-query"
+import { Trash2 } from "lucide-react"
+import { useState } from "react"
+import { useForm } from "react-hook-form"
 
-import type { PersonPublic } from "@/client";
-import { PeopleService } from "@/client";
-import { Button } from "@/components/ui/button";
+import type { PersonPublic } from "@/client"
+import { PeopleService } from "@/client"
+import { Button } from "@/components/ui/button"
 import {
   Dialog,
   DialogClose,
@@ -14,48 +14,45 @@ import {
   DialogFooter,
   DialogHeader,
   DialogTitle,
-} from "@/components/ui/dialog";
-import { DropdownMenuItem } from "@/components/ui/dropdown-menu";
-import { LoadingButton } from "@/components/ui/loading-button";
-import useCustomToast from "@/hooks/useCustomToast";
-import { handleError } from "@/utils";
+} from "@/components/ui/dialog"
+import { DropdownMenuItem } from "@/components/ui/dropdown-menu"
+import { LoadingButton } from "@/components/ui/loading-button"
+import useCustomToast from "@/hooks/useCustomToast"
+import { handleError } from "@/utils"
 
 interface DeletePersonProps {
-  onSuccess: () => void;
-  person: PersonPublic;
+  onSuccess: () => void
+  person: PersonPublic
 }
 
-const DeletePerson = ({
-  onSuccess,
-  person,
-}: DeletePersonProps) => {
-  const [isOpen, setIsOpen] = useState(false);
-  const queryClient = useQueryClient();
-  const { showSuccessToast, showErrorToast } = useCustomToast();
-  const { handleSubmit } = useForm();
+const DeletePerson = ({ onSuccess, person }: DeletePersonProps) => {
+  const [isOpen, setIsOpen] = useState(false)
+  const queryClient = useQueryClient()
+  const { showSuccessToast, showErrorToast } = useCustomToast()
+  const { handleSubmit } = useForm()
 
   const mutation = useMutation({
     mutationFn: (personId: string) => PeopleService.deletePerson({ personId }),
     onSuccess: () => {
-      showSuccessToast("人员已成功删除");
-      setIsOpen(false);
-      onSuccess();
+      showSuccessToast("人员已成功删除")
+      setIsOpen(false)
+      onSuccess()
     },
     onError: handleError.bind(showErrorToast),
     onSettled: () => {
-      queryClient.invalidateQueries({ queryKey: ["people"] });
+      queryClient.invalidateQueries({ queryKey: ["people"] })
     },
-  });
+  })
 
   const onSubmit = async () => {
-    mutation.mutate(person.id);
-  };
+    mutation.mutate(person.id)
+  }
 
   return (
     <Dialog
       open={isOpen}
       onOpenChange={(open) => {
-        setIsOpen(open);
+        setIsOpen(open)
       }}
     >
       <DropdownMenuItem
@@ -96,7 +93,7 @@ const DeletePerson = ({
         </form>
       </DialogContent>
     </Dialog>
-  );
-};
+  )
+}
 
-export default DeletePerson;
+export default DeletePerson

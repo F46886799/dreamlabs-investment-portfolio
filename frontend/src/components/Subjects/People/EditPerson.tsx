@@ -1,12 +1,12 @@
-import { zodResolver } from "@hookform/resolvers/zod";
-import { useMutation, useQueryClient } from "@tanstack/react-query";
-import { Pencil } from "lucide-react";
-import { useEffect, useState } from "react";
-import { useForm } from "react-hook-form";
-import { z } from "zod";
+import { zodResolver } from "@hookform/resolvers/zod"
+import { useMutation, useQueryClient } from "@tanstack/react-query"
+import { Pencil } from "lucide-react"
+import { useEffect, useState } from "react"
+import { useForm } from "react-hook-form"
+import { z } from "zod"
 
-import { type PersonPublic, type PersonType, PeopleService } from "@/client";
-import { Button } from "@/components/ui/button";
+import { PeopleService, type PersonPublic, type PersonType } from "@/client"
+import { Button } from "@/components/ui/button"
 import {
   Dialog,
   DialogClose,
@@ -15,8 +15,8 @@ import {
   DialogFooter,
   DialogHeader,
   DialogTitle,
-} from "@/components/ui/dialog";
-import { DropdownMenuItem } from "@/components/ui/dropdown-menu";
+} from "@/components/ui/dialog"
+import { DropdownMenuItem } from "@/components/ui/dropdown-menu"
 import {
   Form,
   FormControl,
@@ -24,25 +24,25 @@ import {
   FormItem,
   FormLabel,
   FormMessage,
-} from "@/components/ui/form";
-import { Input } from "@/components/ui/input";
-import { LoadingButton } from "@/components/ui/loading-button";
+} from "@/components/ui/form"
+import { Input } from "@/components/ui/input"
+import { LoadingButton } from "@/components/ui/loading-button"
 import {
   Select,
   SelectContent,
   SelectItem,
   SelectTrigger,
   SelectValue,
-} from "@/components/ui/select";
-import useCustomToast from "@/hooks/useCustomToast";
-import { handleError } from "@/utils";
+} from "@/components/ui/select"
+import useCustomToast from "@/hooks/useCustomToast"
+import { handleError } from "@/utils"
 
 const personTypeOptions: Array<{ label: string; value: PersonType }> = [
   { label: "内部成员", value: "internal_member" },
   { label: "客户联系人", value: "client_contact" },
   { label: "外部顾问", value: "external_advisor" },
   { label: "其他", value: "other" },
-];
+]
 
 const formSchema = z.object({
   person_type: z.enum([
@@ -58,44 +58,44 @@ const formSchema = z.object({
     .max(255, { message: "姓名不能超过 255 个字符" }),
   alias: z.string().max(255, { message: "别名不能超过 255 个字符" }),
   notes: z.string().max(1000, { message: "备注不能超过 1000 个字符" }),
-});
+})
 
-type FormData = z.infer<typeof formSchema>;
+type FormData = z.infer<typeof formSchema>
 
 interface EditPersonProps {
-  onSuccess: () => void;
-  person: PersonPublic;
+  onSuccess: () => void
+  person: PersonPublic
 }
 
 const normalizeOptionalText = (value: string) => {
-  const trimmed = value.trim();
-  return trimmed.length > 0 ? trimmed : null;
-};
+  const trimmed = value.trim()
+  return trimmed.length > 0 ? trimmed : null
+}
 
 const EditPerson = ({ onSuccess, person }: EditPersonProps) => {
-  const [isOpen, setIsOpen] = useState(false);
-  const queryClient = useQueryClient();
-  const { showSuccessToast, showErrorToast } = useCustomToast();
+  const [isOpen, setIsOpen] = useState(false)
+  const queryClient = useQueryClient()
+  const { showSuccessToast, showErrorToast } = useCustomToast()
 
   const formValues = {
     person_type: person.person_type,
     name: person.name,
     alias: person.alias ?? "",
     notes: person.notes ?? "",
-  } satisfies FormData;
+  } satisfies FormData
 
   const form = useForm<FormData>({
     resolver: zodResolver(formSchema),
     mode: "onBlur",
     criteriaMode: "all",
     defaultValues: formValues,
-  });
+  })
 
   useEffect(() => {
     if (!isOpen) {
-      form.reset(formValues);
+      form.reset(formValues)
     }
-  }, [form, formValues, isOpen]);
+  }, [form, formValues, isOpen])
 
   const mutation = useMutation({
     mutationFn: (data: FormData) =>
@@ -109,35 +109,35 @@ const EditPerson = ({ onSuccess, person }: EditPersonProps) => {
         },
       }),
     onSuccess: () => {
-      showSuccessToast("人员更新成功");
-      setIsOpen(false);
-      onSuccess();
+      showSuccessToast("人员更新成功")
+      setIsOpen(false)
+      onSuccess()
     },
     onError: handleError.bind(showErrorToast),
     onSettled: () => {
-      queryClient.invalidateQueries({ queryKey: ["people"] });
+      queryClient.invalidateQueries({ queryKey: ["people"] })
     },
-  });
+  })
 
   const onSubmit = (data: FormData) => {
-    mutation.mutate(data);
-  };
+    mutation.mutate(data)
+  }
 
   const handleOpenChange = (open: boolean) => {
-    setIsOpen(open);
+    setIsOpen(open)
 
     if (!open) {
-      form.reset(formValues);
+      form.reset(formValues)
     }
-  };
+  }
 
   return (
     <Dialog open={isOpen} onOpenChange={handleOpenChange}>
       <DropdownMenuItem
         onSelect={(event) => event.preventDefault()}
         onClick={() => {
-          form.reset(formValues);
-          setIsOpen(true);
+          form.reset(formValues)
+          setIsOpen(true)
         }}
       >
         <Pencil />
@@ -246,7 +246,7 @@ const EditPerson = ({ onSuccess, person }: EditPersonProps) => {
         </Form>
       </DialogContent>
     </Dialog>
-  );
-};
+  )
+}
 
-export default EditPerson;
+export default EditPerson
