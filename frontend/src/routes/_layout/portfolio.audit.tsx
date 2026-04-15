@@ -1,9 +1,9 @@
-import type { ColumnDef } from "@tanstack/react-table"
 import { createFileRoute } from "@tanstack/react-router"
+import type { ColumnDef } from "@tanstack/react-table"
 
 import type { AuditEventPublic } from "@/client"
-import { Badge } from "@/components/ui/badge"
 import { DataTable } from "@/components/Common/DataTable"
+import { Badge } from "@/components/ui/badge"
 import { useAuditEvents } from "@/hooks/useAuditEvents"
 
 const auditColumns: ColumnDef<AuditEventPublic>[] = [
@@ -65,7 +65,9 @@ function PortfolioAudit() {
     <div className="flex flex-col gap-6">
       <div className="space-y-2">
         <h1 className="text-2xl font-bold tracking-tight">审计日志</h1>
-        <p className="text-muted-foreground">追踪数据标准化与冲突处理的完整链路</p>
+        <p className="text-muted-foreground">
+          追踪数据标准化与冲突处理的完整链路
+        </p>
       </div>
 
       {isLoading ? (

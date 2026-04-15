@@ -3,7 +3,7 @@
 import type { CancelablePromise } from './core/CancelablePromise';
 import { OpenAPI } from './core/OpenAPI';
 import { request as __request } from './core/request';
-import type { ItemsReadItemsData, ItemsReadItemsResponse, ItemsCreateItemData, ItemsCreateItemResponse, ItemsReadItemData, ItemsReadItemResponse, ItemsUpdateItemData, ItemsUpdateItemResponse, ItemsDeleteItemData, ItemsDeleteItemResponse, LoginLoginAccessTokenData, LoginLoginAccessTokenResponse, LoginTestTokenResponse, LoginRecoverPasswordData, LoginRecoverPasswordResponse, LoginResetPasswordData, LoginResetPasswordResponse, LoginRecoverPasswordHtmlContentData, LoginRecoverPasswordHtmlContentResponse, PortfolioSyncConnectorPositionsData, PortfolioSyncConnectorPositionsResponse, PortfolioGetUnifiedPortfolioResponse, PortfolioGetHealthReportResponse, PortfolioGetAuditEventsResponse, PrivateCreateUserData, PrivateCreateUserResponse, UsersReadUsersData, UsersReadUsersResponse, UsersCreateUserData, UsersCreateUserResponse, UsersReadUserMeResponse, UsersDeleteUserMeResponse, UsersUpdateUserMeData, UsersUpdateUserMeResponse, UsersUpdatePasswordMeData, UsersUpdatePasswordMeResponse, UsersRegisterUserData, UsersRegisterUserResponse, UsersReadUserByIdData, UsersReadUserByIdResponse, UsersUpdateUserData, UsersUpdateUserResponse, UsersDeleteUserData, UsersDeleteUserResponse, UtilsTestEmailData, UtilsTestEmailResponse, UtilsHealthCheckResponse } from './types.gen';
+import type { ItemsReadItemsData, ItemsReadItemsResponse, ItemsCreateItemData, ItemsCreateItemResponse, ItemsReadItemData, ItemsReadItemResponse, ItemsUpdateItemData, ItemsUpdateItemResponse, ItemsDeleteItemData, ItemsDeleteItemResponse, LoginLoginAccessTokenData, LoginLoginAccessTokenResponse, LoginTestTokenResponse, LoginRecoverPasswordData, LoginRecoverPasswordResponse, LoginResetPasswordData, LoginResetPasswordResponse, LoginRecoverPasswordHtmlContentData, LoginRecoverPasswordHtmlContentResponse, OrganizationsReadOrganizationsData, OrganizationsReadOrganizationsResponse, OrganizationsCreateOrganizationData, OrganizationsCreateOrganizationResponse, OrganizationsReadOrganizationData, OrganizationsReadOrganizationResponse, OrganizationsUpdateOrganizationData, OrganizationsUpdateOrganizationResponse, OrganizationsDeleteOrganizationData, OrganizationsDeleteOrganizationResponse, PeopleReadPeopleData, PeopleReadPeopleResponse, PeopleCreatePersonData, PeopleCreatePersonResponse, PeopleReadPersonData, PeopleReadPersonResponse, PeopleUpdatePersonData, PeopleUpdatePersonResponse, PeopleDeletePersonData, PeopleDeletePersonResponse, PortfolioSyncConnectorPositionsData, PortfolioSyncConnectorPositionsResponse, PortfolioGetUnifiedPortfolioResponse, PortfolioGetHealthReportResponse, PortfolioGetAuditEventsResponse, PrivateCreateUserData, PrivateCreateUserResponse, UsersReadUsersData, UsersReadUsersResponse, UsersCreateUserData, UsersCreateUserResponse, UsersReadUserMeResponse, UsersDeleteUserMeResponse, UsersUpdateUserMeData, UsersUpdateUserMeResponse, UsersUpdatePasswordMeData, UsersUpdatePasswordMeResponse, UsersRegisterUserData, UsersRegisterUserResponse, UsersReadUserByIdData, UsersReadUserByIdResponse, UsersUpdateUserData, UsersUpdateUserResponse, UsersDeleteUserData, UsersDeleteUserResponse, UtilsTestEmailData, UtilsTestEmailResponse, UtilsHealthCheckResponse } from './types.gen';
 
 export class ItemsService {
     /**
@@ -205,6 +205,218 @@ export class LoginService {
             url: '/api/v1/password-recovery-html-content/{email}',
             path: {
                 email: data.email
+            },
+            errors: {
+                422: 'Validation Error'
+            }
+        });
+    }
+}
+
+export class OrganizationsService {
+    /**
+     * Read Organizations
+     * @param data The data for the request.
+     * @param data.skip
+     * @param data.limit
+     * @returns OrganizationsPublic Successful Response
+     * @throws ApiError
+     */
+    public static readOrganizations(data: OrganizationsReadOrganizationsData = {}): CancelablePromise<OrganizationsReadOrganizationsResponse> {
+        return __request(OpenAPI, {
+            method: 'GET',
+            url: '/api/v1/organizations/',
+            query: {
+                skip: data.skip,
+                limit: data.limit
+            },
+            errors: {
+                422: 'Validation Error'
+            }
+        });
+    }
+    
+    /**
+     * Create Organization
+     * @param data The data for the request.
+     * @param data.requestBody
+     * @returns OrganizationPublic Successful Response
+     * @throws ApiError
+     */
+    public static createOrganization(data: OrganizationsCreateOrganizationData): CancelablePromise<OrganizationsCreateOrganizationResponse> {
+        return __request(OpenAPI, {
+            method: 'POST',
+            url: '/api/v1/organizations/',
+            body: data.requestBody,
+            mediaType: 'application/json',
+            errors: {
+                422: 'Validation Error'
+            }
+        });
+    }
+    
+    /**
+     * Read Organization
+     * @param data The data for the request.
+     * @param data.organizationId
+     * @returns OrganizationPublic Successful Response
+     * @throws ApiError
+     */
+    public static readOrganization(data: OrganizationsReadOrganizationData): CancelablePromise<OrganizationsReadOrganizationResponse> {
+        return __request(OpenAPI, {
+            method: 'GET',
+            url: '/api/v1/organizations/{organization_id}',
+            path: {
+                organization_id: data.organizationId
+            },
+            errors: {
+                422: 'Validation Error'
+            }
+        });
+    }
+    
+    /**
+     * Update Organization
+     * @param data The data for the request.
+     * @param data.organizationId
+     * @param data.requestBody
+     * @returns OrganizationPublic Successful Response
+     * @throws ApiError
+     */
+    public static updateOrganization(data: OrganizationsUpdateOrganizationData): CancelablePromise<OrganizationsUpdateOrganizationResponse> {
+        return __request(OpenAPI, {
+            method: 'PATCH',
+            url: '/api/v1/organizations/{organization_id}',
+            path: {
+                organization_id: data.organizationId
+            },
+            body: data.requestBody,
+            mediaType: 'application/json',
+            errors: {
+                422: 'Validation Error'
+            }
+        });
+    }
+    
+    /**
+     * Delete Organization
+     * @param data The data for the request.
+     * @param data.organizationId
+     * @returns Message Successful Response
+     * @throws ApiError
+     */
+    public static deleteOrganization(data: OrganizationsDeleteOrganizationData): CancelablePromise<OrganizationsDeleteOrganizationResponse> {
+        return __request(OpenAPI, {
+            method: 'DELETE',
+            url: '/api/v1/organizations/{organization_id}',
+            path: {
+                organization_id: data.organizationId
+            },
+            errors: {
+                422: 'Validation Error'
+            }
+        });
+    }
+}
+
+export class PeopleService {
+    /**
+     * Read People
+     * @param data The data for the request.
+     * @param data.skip
+     * @param data.limit
+     * @returns PeoplePublic Successful Response
+     * @throws ApiError
+     */
+    public static readPeople(data: PeopleReadPeopleData = {}): CancelablePromise<PeopleReadPeopleResponse> {
+        return __request(OpenAPI, {
+            method: 'GET',
+            url: '/api/v1/people/',
+            query: {
+                skip: data.skip,
+                limit: data.limit
+            },
+            errors: {
+                422: 'Validation Error'
+            }
+        });
+    }
+    
+    /**
+     * Create Person
+     * @param data The data for the request.
+     * @param data.requestBody
+     * @returns PersonPublic Successful Response
+     * @throws ApiError
+     */
+    public static createPerson(data: PeopleCreatePersonData): CancelablePromise<PeopleCreatePersonResponse> {
+        return __request(OpenAPI, {
+            method: 'POST',
+            url: '/api/v1/people/',
+            body: data.requestBody,
+            mediaType: 'application/json',
+            errors: {
+                422: 'Validation Error'
+            }
+        });
+    }
+    
+    /**
+     * Read Person
+     * @param data The data for the request.
+     * @param data.personId
+     * @returns PersonPublic Successful Response
+     * @throws ApiError
+     */
+    public static readPerson(data: PeopleReadPersonData): CancelablePromise<PeopleReadPersonResponse> {
+        return __request(OpenAPI, {
+            method: 'GET',
+            url: '/api/v1/people/{person_id}',
+            path: {
+                person_id: data.personId
+            },
+            errors: {
+                422: 'Validation Error'
+            }
+        });
+    }
+    
+    /**
+     * Update Person
+     * @param data The data for the request.
+     * @param data.personId
+     * @param data.requestBody
+     * @returns PersonPublic Successful Response
+     * @throws ApiError
+     */
+    public static updatePerson(data: PeopleUpdatePersonData): CancelablePromise<PeopleUpdatePersonResponse> {
+        return __request(OpenAPI, {
+            method: 'PATCH',
+            url: '/api/v1/people/{person_id}',
+            path: {
+                person_id: data.personId
+            },
+            body: data.requestBody,
+            mediaType: 'application/json',
+            errors: {
+                422: 'Validation Error'
+            }
+        });
+    }
+    
+    /**
+     * Delete Person
+     * @param data The data for the request.
+     * @param data.personId
+     * @returns Message Successful Response
+     * @throws ApiError
+     */
+    public static deletePerson(data: PeopleDeletePersonData): CancelablePromise<PeopleDeletePersonResponse> {
+        return __request(OpenAPI, {
+            method: 'DELETE',
+            url: '/api/v1/people/{person_id}',
+            path: {
+                person_id: data.personId
             },
             errors: {
                 422: 'Validation Error'

@@ -19,7 +19,9 @@ export function PortfolioMetricsCard({
         </CardTitle>
       </CardHeader>
       <CardContent className="space-y-1">
-        <div className="text-2xl font-semibold font-mono tabular-nums">{value}</div>
+        <div className="text-2xl font-semibold font-mono tabular-nums">
+          {value}
+        </div>
         {hint ? <p className="text-xs text-muted-foreground">{hint}</p> : null}
       </CardContent>
     </Card>

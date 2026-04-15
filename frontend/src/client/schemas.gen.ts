@@ -379,6 +379,358 @@ export const NewPasswordSchema = {
     title: 'NewPassword'
 } as const;
 
+export const OrganizationCreateSchema = {
+    properties: {
+        organization_type: {
+            '$ref': '#/components/schemas/OrganizationType'
+        },
+        name: {
+            type: 'string',
+            maxLength: 255,
+            minLength: 1,
+            title: 'Name'
+        },
+        alias: {
+            anyOf: [
+                {
+                    type: 'string',
+                    maxLength: 255
+                },
+                {
+                    type: 'null'
+                }
+            ],
+            title: 'Alias'
+        },
+        notes: {
+            anyOf: [
+                {
+                    type: 'string',
+                    maxLength: 1000
+                },
+                {
+                    type: 'null'
+                }
+            ],
+            title: 'Notes'
+        }
+    },
+    type: 'object',
+    required: ['organization_type', 'name'],
+    title: 'OrganizationCreate'
+} as const;
+
+export const OrganizationPublicSchema = {
+    properties: {
+        organization_type: {
+            '$ref': '#/components/schemas/OrganizationType'
+        },
+        name: {
+            type: 'string',
+            maxLength: 255,
+            minLength: 1,
+            title: 'Name'
+        },
+        alias: {
+            anyOf: [
+                {
+                    type: 'string',
+                    maxLength: 255
+                },
+                {
+                    type: 'null'
+                }
+            ],
+            title: 'Alias'
+        },
+        notes: {
+            anyOf: [
+                {
+                    type: 'string',
+                    maxLength: 1000
+                },
+                {
+                    type: 'null'
+                }
+            ],
+            title: 'Notes'
+        },
+        id: {
+            type: 'string',
+            format: 'uuid',
+            title: 'Id'
+        },
+        created_at: {
+            type: 'string',
+            format: 'date-time',
+            title: 'Created At'
+        },
+        updated_at: {
+            type: 'string',
+            format: 'date-time',
+            title: 'Updated At'
+        }
+    },
+    type: 'object',
+    required: ['organization_type', 'name', 'id', 'created_at', 'updated_at'],
+    title: 'OrganizationPublic'
+} as const;
+
+export const OrganizationTypeSchema = {
+    type: 'string',
+    enum: ['fund_or_investment_vehicle', 'broker_or_bank', 'service_provider', 'other'],
+    title: 'OrganizationType'
+} as const;
+
+export const OrganizationUpdateSchema = {
+    properties: {
+        organization_type: {
+            anyOf: [
+                {
+                    '$ref': '#/components/schemas/OrganizationType'
+                },
+                {
+                    type: 'null'
+                }
+            ]
+        },
+        name: {
+            anyOf: [
+                {
+                    type: 'string',
+                    maxLength: 255,
+                    minLength: 1
+                },
+                {
+                    type: 'null'
+                }
+            ],
+            title: 'Name'
+        },
+        alias: {
+            anyOf: [
+                {
+                    type: 'string',
+                    maxLength: 255
+                },
+                {
+                    type: 'null'
+                }
+            ],
+            title: 'Alias'
+        },
+        notes: {
+            anyOf: [
+                {
+                    type: 'string',
+                    maxLength: 1000
+                },
+                {
+                    type: 'null'
+                }
+            ],
+            title: 'Notes'
+        }
+    },
+    type: 'object',
+    title: 'OrganizationUpdate'
+} as const;
+
+export const OrganizationsPublicSchema = {
+    properties: {
+        data: {
+            items: {
+                '$ref': '#/components/schemas/OrganizationPublic'
+            },
+            type: 'array',
+            title: 'Data'
+        },
+        count: {
+            type: 'integer',
+            title: 'Count'
+        }
+    },
+    type: 'object',
+    required: ['data', 'count'],
+    title: 'OrganizationsPublic'
+} as const;
+
+export const PeoplePublicSchema = {
+    properties: {
+        data: {
+            items: {
+                '$ref': '#/components/schemas/PersonPublic'
+            },
+            type: 'array',
+            title: 'Data'
+        },
+        count: {
+            type: 'integer',
+            title: 'Count'
+        }
+    },
+    type: 'object',
+    required: ['data', 'count'],
+    title: 'PeoplePublic'
+} as const;
+
+export const PersonCreateSchema = {
+    properties: {
+        person_type: {
+            '$ref': '#/components/schemas/PersonType'
+        },
+        name: {
+            type: 'string',
+            maxLength: 255,
+            minLength: 1,
+            title: 'Name'
+        },
+        alias: {
+            anyOf: [
+                {
+                    type: 'string',
+                    maxLength: 255
+                },
+                {
+                    type: 'null'
+                }
+            ],
+            title: 'Alias'
+        },
+        notes: {
+            anyOf: [
+                {
+                    type: 'string',
+                    maxLength: 1000
+                },
+                {
+                    type: 'null'
+                }
+            ],
+            title: 'Notes'
+        }
+    },
+    type: 'object',
+    required: ['person_type', 'name'],
+    title: 'PersonCreate'
+} as const;
+
+export const PersonPublicSchema = {
+    properties: {
+        person_type: {
+            '$ref': '#/components/schemas/PersonType'
+        },
+        name: {
+            type: 'string',
+            maxLength: 255,
+            minLength: 1,
+            title: 'Name'
+        },
+        alias: {
+            anyOf: [
+                {
+                    type: 'string',
+                    maxLength: 255
+                },
+                {
+                    type: 'null'
+                }
+            ],
+            title: 'Alias'
+        },
+        notes: {
+            anyOf: [
+                {
+                    type: 'string',
+                    maxLength: 1000
+                },
+                {
+                    type: 'null'
+                }
+            ],
+            title: 'Notes'
+        },
+        id: {
+            type: 'string',
+            format: 'uuid',
+            title: 'Id'
+        },
+        created_at: {
+            type: 'string',
+            format: 'date-time',
+            title: 'Created At'
+        },
+        updated_at: {
+            type: 'string',
+            format: 'date-time',
+            title: 'Updated At'
+        }
+    },
+    type: 'object',
+    required: ['person_type', 'name', 'id', 'created_at', 'updated_at'],
+    title: 'PersonPublic'
+} as const;
+
+export const PersonTypeSchema = {
+    type: 'string',
+    enum: ['internal_member', 'client_contact', 'external_advisor', 'other'],
+    title: 'PersonType'
+} as const;
+
+export const PersonUpdateSchema = {
+    properties: {
+        person_type: {
+            anyOf: [
+                {
+                    '$ref': '#/components/schemas/PersonType'
+                },
+                {
+                    type: 'null'
+                }
+            ]
+        },
+        name: {
+            anyOf: [
+                {
+                    type: 'string',
+                    maxLength: 255,
+                    minLength: 1
+                },
+                {
+                    type: 'null'
+                }
+            ],
+            title: 'Name'
+        },
+        alias: {
+            anyOf: [
+                {
+                    type: 'string',
+                    maxLength: 255
+                },
+                {
+                    type: 'null'
+                }
+            ],
+            title: 'Alias'
+        },
+        notes: {
+            anyOf: [
+                {
+                    type: 'string',
+                    maxLength: 1000
+                },
+                {
+                    type: 'null'
+                }
+            ],
+            title: 'Notes'
+        }
+    },
+    type: 'object',
+    title: 'PersonUpdate'
+} as const;
+
 export const PrivateUserCreateSchema = {
     properties: {
         email: {

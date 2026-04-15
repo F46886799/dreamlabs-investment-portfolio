@@ -15,6 +15,7 @@ import { Route as RecoverPasswordRouteImport } from './routes/recover-password'
 import { Route as LoginRouteImport } from './routes/login'
 import { Route as LayoutRouteImport } from './routes/_layout'
 import { Route as LayoutIndexRouteImport } from './routes/_layout/index'
+import { Route as LayoutSubjectsRouteImport } from './routes/_layout/subjects'
 import { Route as LayoutSettingsRouteImport } from './routes/_layout/settings'
 import { Route as LayoutPortfolioRouteImport } from './routes/_layout/portfolio'
 import { Route as LayoutItemsRouteImport } from './routes/_layout/items'
@@ -50,6 +51,11 @@ const LayoutRoute = LayoutRouteImport.update({
 const LayoutIndexRoute = LayoutIndexRouteImport.update({
   id: '/',
   path: '/',
+  getParentRoute: () => LayoutRoute,
+} as any)
+const LayoutSubjectsRoute = LayoutSubjectsRouteImport.update({
+  id: '/subjects',
+  path: '/subjects',
   getParentRoute: () => LayoutRoute,
 } as any)
 const LayoutSettingsRoute = LayoutSettingsRouteImport.update({
@@ -99,6 +105,7 @@ export interface FileRoutesByFullPath {
   '/items': typeof LayoutItemsRoute
   '/portfolio': typeof LayoutPortfolioRouteWithChildren
   '/settings': typeof LayoutSettingsRoute
+  '/subjects': typeof LayoutSubjectsRoute
   '/portfolio/audit': typeof LayoutPortfolioAuditRoute
   '/portfolio/conflicts': typeof LayoutPortfolioConflictsRoute
   '/portfolio/': typeof LayoutPortfolioIndexRoute
@@ -111,6 +118,7 @@ export interface FileRoutesByTo {
   '/admin': typeof LayoutAdminRoute
   '/items': typeof LayoutItemsRoute
   '/settings': typeof LayoutSettingsRoute
+  '/subjects': typeof LayoutSubjectsRoute
   '/': typeof LayoutIndexRoute
   '/portfolio/audit': typeof LayoutPortfolioAuditRoute
   '/portfolio/conflicts': typeof LayoutPortfolioConflictsRoute
@@ -127,6 +135,7 @@ export interface FileRoutesById {
   '/_layout/items': typeof LayoutItemsRoute
   '/_layout/portfolio': typeof LayoutPortfolioRouteWithChildren
   '/_layout/settings': typeof LayoutSettingsRoute
+  '/_layout/subjects': typeof LayoutSubjectsRoute
   '/_layout/': typeof LayoutIndexRoute
   '/_layout/portfolio/audit': typeof LayoutPortfolioAuditRoute
   '/_layout/portfolio/conflicts': typeof LayoutPortfolioConflictsRoute
@@ -144,6 +153,7 @@ export interface FileRouteTypes {
     | '/items'
     | '/portfolio'
     | '/settings'
+    | '/subjects'
     | '/portfolio/audit'
     | '/portfolio/conflicts'
     | '/portfolio/'
@@ -156,6 +166,7 @@ export interface FileRouteTypes {
     | '/admin'
     | '/items'
     | '/settings'
+    | '/subjects'
     | '/'
     | '/portfolio/audit'
     | '/portfolio/conflicts'
@@ -171,6 +182,7 @@ export interface FileRouteTypes {
     | '/_layout/items'
     | '/_layout/portfolio'
     | '/_layout/settings'
+    | '/_layout/subjects'
     | '/_layout/'
     | '/_layout/portfolio/audit'
     | '/_layout/portfolio/conflicts'
@@ -227,6 +239,13 @@ declare module '@tanstack/react-router' {
       path: '/'
       fullPath: '/'
       preLoaderRoute: typeof LayoutIndexRouteImport
+      parentRoute: typeof LayoutRoute
+    }
+    '/_layout/subjects': {
+      id: '/_layout/subjects'
+      path: '/subjects'
+      fullPath: '/subjects'
+      preLoaderRoute: typeof LayoutSubjectsRouteImport
       parentRoute: typeof LayoutRoute
     }
     '/_layout/settings': {
@@ -302,6 +321,7 @@ interface LayoutRouteChildren {
   LayoutItemsRoute: typeof LayoutItemsRoute
   LayoutPortfolioRoute: typeof LayoutPortfolioRouteWithChildren
   LayoutSettingsRoute: typeof LayoutSettingsRoute
+  LayoutSubjectsRoute: typeof LayoutSubjectsRoute
   LayoutIndexRoute: typeof LayoutIndexRoute
 }
 
@@ -310,6 +330,7 @@ const LayoutRouteChildren: LayoutRouteChildren = {
   LayoutItemsRoute: LayoutItemsRoute,
   LayoutPortfolioRoute: LayoutPortfolioRouteWithChildren,
   LayoutSettingsRoute: LayoutSettingsRoute,
+  LayoutSubjectsRoute: LayoutSubjectsRoute,
   LayoutIndexRoute: LayoutIndexRoute,
 }
 

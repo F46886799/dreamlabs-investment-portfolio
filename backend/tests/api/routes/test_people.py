@@ -1,14 +1,22 @@
 import uuid
 from datetime import timedelta
 
+import pytest
 from fastapi.testclient import TestClient
-from sqlmodel import Session
+from sqlmodel import Session, delete
 
 from app.core.config import settings
-from app.models import PersonType
+from app.models import Person, PersonType
 from tests.utils.person import create_random_person
 
 
+@pytest.fixture(autouse=True)
+def clean_people(db: Session) -> None:
+    db.execute(delete(Person))
+    db.commit()
+    yield
+    db.execute(delete(Person))
+    db.commit()
 def test_create_person(
     client: TestClient, superuser_token_headers: dict[str, str]
 ) -> None:
@@ -90,7 +98,7 @@ def test_read_people(
     )
     assert response.status_code == 200
     content = response.json()
-    assert content["count"] >= 2
+    assert content["count"] == 2
     assert len(content["data"]) == 1
     assert content["data"][0]["id"] == str(second_person.id)
     assert content["data"][0]["id"] != str(first_person.id)
@@ -122,6 +130,20 @@ def test_update_person(
     assert content["updated_at"] != original_updated_at.isoformat()
 
 
+def test_update_person_not_found(
+    client: TestClient, superuser_token_headers: dict[str, str]
+) -> None:
+    response = client.patch(
+        f"{settings.API_V1_STR}/people/{uuid.uuid4()}",
+        headers=superuser_token_headers,
+        json={
+            "name": "Updated Name",
+        },
+    )
+    assert response.status_code == 404
+    assert response.json()["detail"] == "Person not found"
+
+
 def test_delete_person(
     client: TestClient, superuser_token_headers: dict[str, str], db: Session
 ) -> None:
@@ -132,3 +154,9 @@ def test_delete_person(
     )
     assert response.status_code == 200
     assert response.json()["message"] == "Person deleted successfully"
+    read_response = client.get(
+        f"{settings.API_V1_STR}/people/{person.id}",
+        headers=superuser_token_headers,
+    )
+    assert read_response.status_code == 404
+    assert read_response.json()["detail"] == "Person not found"
