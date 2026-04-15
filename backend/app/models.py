@@ -2,10 +2,33 @@ import uuid
 from datetime import datetime, timezone
 from enum import Enum
 
-from pydantic import EmailStr
-from sqlalchemy import Column, DateTime
+from pydantic import EmailStr, field_validator
+from sqlalchemy import Column, DateTime, Index, event, text
 from sqlalchemy import Enum as SAEnum
 from sqlmodel import Field, Relationship, SQLModel
+
+
+ALLOWED_ASSET_TYPES = {"stock", "etf", "crypto", "bond", "cash"}
+
+
+def normalize_asset_type_value(value: str) -> str:
+    normalized = value.strip().lower()
+    if normalized not in ALLOWED_ASSET_TYPES:
+        raise ValueError(
+            "asset_type must be one of: stock, etf, crypto, bond, cash"
+        )
+    return normalized
+
+
+def normalize_symbol_value(value: str) -> str:
+    return value.strip().upper()
+
+
+def normalize_market_value(value: str | None) -> str | None:
+    if value is None:
+        return None
+    normalized = value.strip().upper()
+    return normalized or None
 
 
 def get_datetime_utc() -> datetime:
@@ -372,3 +395,127 @@ class TokenPayload(SQLModel):
 class NewPassword(SQLModel):
     token: str
     new_password: str = Field(min_length=8, max_length=128)
+
+
+class AssetInstrumentBase(SQLModel):
+    asset_type: str = Field(max_length=32, index=True)
+    symbol: str = Field(min_length=1, max_length=32, index=True)
+    display_name: str = Field(min_length=1, max_length=255)
+    canonical_name: str | None = Field(default=None, max_length=255)
+    market: str | None = Field(default=None, max_length=64)
+    exchange: str | None = Field(default=None, max_length=64)
+    currency: str = Field(default="USD", max_length=8)
+    country: str | None = Field(default=None, max_length=64)
+    category_level_1: str = Field(default="other", max_length=64)
+    category_level_2: str | None = Field(default=None, max_length=64)
+    status: str = Field(default="active", max_length=32)
+    sync_status: str = Field(default="manual", max_length=32)
+    external_source: str | None = Field(default=None, max_length=64)
+    external_id: str | None = Field(default=None, max_length=128)
+    is_active: bool = True
+
+    @field_validator("asset_type")
+    @classmethod
+    def validate_asset_type(cls, value: str) -> str:
+        return normalize_asset_type_value(value)
+
+    @field_validator("symbol")
+    @classmethod
+    def normalize_symbol(cls, value: str) -> str:
+        return normalize_symbol_value(value)
+
+    @field_validator("exchange", "market")
+    @classmethod
+    def normalize_market_fields(cls, value: str | None) -> str | None:
+        return normalize_market_value(value)
+
+
+class AssetInstrumentCreate(AssetInstrumentBase):
+    pass
+
+
+class AssetInstrumentUpdate(SQLModel):
+    asset_type: str | None = Field(default=None, max_length=32)
+    symbol: str | None = Field(default=None, min_length=1, max_length=32)
+    display_name: str | None = Field(default=None, min_length=1, max_length=255)
+    canonical_name: str | None = Field(default=None, max_length=255)
+    market: str | None = Field(default=None, max_length=64)
+    exchange: str | None = Field(default=None, max_length=64)
+    currency: str | None = Field(default=None, max_length=8)
+    country: str | None = Field(default=None, max_length=64)
+    category_level_1: str | None = Field(default=None, max_length=64)
+    category_level_2: str | None = Field(default=None, max_length=64)
+    status: str | None = Field(default=None, max_length=32)
+    sync_status: str | None = Field(default=None, max_length=32)
+    external_source: str | None = Field(default=None, max_length=64)
+    external_id: str | None = Field(default=None, max_length=128)
+    is_active: bool | None = None
+
+    @field_validator("asset_type")
+    @classmethod
+    def validate_asset_type(cls, value: str | None) -> str | None:
+        if value is None:
+            return None
+        return normalize_asset_type_value(value)
+
+    @field_validator("symbol")
+    @classmethod
+    def normalize_symbol(cls, value: str | None) -> str | None:
+        if value is None:
+            return None
+        return normalize_symbol_value(value)
+
+    @field_validator("exchange", "market")
+    @classmethod
+    def normalize_market_fields(cls, value: str | None) -> str | None:
+        return normalize_market_value(value)
+
+
+class AssetInstrument(AssetInstrumentBase, table=True):
+    __table_args__ = (
+        Index(
+            "uq_assetinstrument_type_symbol_exchange_market",
+            "asset_type",
+            text("lower(symbol)"),
+            text("coalesce(lower(exchange), '')"),
+            text("coalesce(lower(market), '')"),
+            unique=True,
+        ),
+    )
+
+    id: uuid.UUID = Field(default_factory=uuid.uuid4, primary_key=True)
+    created_at: datetime = Field(
+        default_factory=get_datetime_utc,
+        sa_type=DateTime(timezone=True),  # type: ignore
+    )
+    updated_at: datetime = Field(
+        default_factory=get_datetime_utc,
+        sa_type=DateTime(timezone=True),  # type: ignore
+    )
+    last_synced_at: datetime | None = Field(
+        default=None,
+        sa_type=DateTime(timezone=True),  # type: ignore
+    )
+
+class AssetInstrumentPublic(AssetInstrumentBase):
+    id: uuid.UUID
+    created_at: datetime
+    updated_at: datetime
+    last_synced_at: datetime | None = None
+
+
+class AssetInstrumentsPublic(SQLModel):
+    data: list[AssetInstrumentPublic]
+    count: int
+
+
+@event.listens_for(AssetInstrument, "before_insert")
+@event.listens_for(AssetInstrument, "before_update")
+def normalize_asset_instrument_before_persist(
+    mapper: object, connection: object, target: AssetInstrument
+) -> None:
+    del mapper, connection
+    target.asset_type = normalize_asset_type_value(target.asset_type)
+    target.symbol = normalize_symbol_value(target.symbol)
+    target.exchange = normalize_market_value(target.exchange)
+    target.market = normalize_market_value(target.market)

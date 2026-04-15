@@ -3,7 +3,7 @@
 import type { CancelablePromise } from './core/CancelablePromise';
 import { OpenAPI } from './core/OpenAPI';
 import { request as __request } from './core/request';
-import type { AccountsCreateAccountData, AccountsCreateAccountResponse, AccountsReadAccountsData, AccountsReadAccountsResponse, AccountsUpdateAccountData, AccountsUpdateAccountResponse, ItemsReadItemsData, ItemsReadItemsResponse, ItemsCreateItemData, ItemsCreateItemResponse, ItemsReadItemData, ItemsReadItemResponse, ItemsUpdateItemData, ItemsUpdateItemResponse, ItemsDeleteItemData, ItemsDeleteItemResponse, LoginLoginAccessTokenData, LoginLoginAccessTokenResponse, LoginTestTokenResponse, LoginRecoverPasswordData, LoginRecoverPasswordResponse, LoginResetPasswordData, LoginResetPasswordResponse, LoginRecoverPasswordHtmlContentData, LoginRecoverPasswordHtmlContentResponse, PortfolioSyncConnectorPositionsData, PortfolioSyncConnectorPositionsResponse, PortfolioGetUnifiedPortfolioData, PortfolioGetUnifiedPortfolioResponse, PortfolioGetHealthReportData, PortfolioGetHealthReportResponse, PortfolioGetAuditEventsResponse, PortfoliosCreatePortfolioData, PortfoliosCreatePortfolioResponse, PortfoliosReadPortfoliosData, PortfoliosReadPortfoliosResponse, PortfoliosUpdatePortfolioData, PortfoliosUpdatePortfolioResponse, PrivateCreateUserData, PrivateCreateUserResponse, UsersReadUsersData, UsersReadUsersResponse, UsersCreateUserData, UsersCreateUserResponse, UsersReadUserMeResponse, UsersDeleteUserMeResponse, UsersUpdateUserMeData, UsersUpdateUserMeResponse, UsersUpdatePasswordMeData, UsersUpdatePasswordMeResponse, UsersRegisterUserData, UsersRegisterUserResponse, UsersReadUserByIdData, UsersReadUserByIdResponse, UsersUpdateUserData, UsersUpdateUserResponse, UsersDeleteUserData, UsersDeleteUserResponse, UtilsTestEmailData, UtilsTestEmailResponse, UtilsHealthCheckResponse } from './types.gen';
+import type { AccountsCreateAccountData, AccountsCreateAccountResponse, AccountsReadAccountsData, AccountsReadAccountsResponse, AccountsUpdateAccountData, AccountsUpdateAccountResponse, AssetsReadAssetsData, AssetsReadAssetsResponse, AssetsCreateAssetData, AssetsCreateAssetResponse, AssetsReadAssetData, AssetsReadAssetResponse, AssetsUpdateAssetData, AssetsUpdateAssetResponse, ItemsReadItemsData, ItemsReadItemsResponse, ItemsCreateItemData, ItemsCreateItemResponse, ItemsReadItemData, ItemsReadItemResponse, ItemsUpdateItemData, ItemsUpdateItemResponse, ItemsDeleteItemData, ItemsDeleteItemResponse, LoginLoginAccessTokenData, LoginLoginAccessTokenResponse, LoginTestTokenResponse, LoginRecoverPasswordData, LoginRecoverPasswordResponse, LoginResetPasswordData, LoginResetPasswordResponse, LoginRecoverPasswordHtmlContentData, LoginRecoverPasswordHtmlContentResponse, PortfolioSyncConnectorPositionsData, PortfolioSyncConnectorPositionsResponse, PortfolioGetUnifiedPortfolioData, PortfolioGetUnifiedPortfolioResponse, PortfolioGetHealthReportData, PortfolioGetHealthReportResponse, PortfolioGetAuditEventsResponse, PortfoliosCreatePortfolioData, PortfoliosCreatePortfolioResponse, PortfoliosReadPortfoliosData, PortfoliosReadPortfoliosResponse, PortfoliosUpdatePortfolioData, PortfoliosUpdatePortfolioResponse, PrivateCreateUserData, PrivateCreateUserResponse, UsersReadUsersData, UsersReadUsersResponse, UsersCreateUserData, UsersCreateUserResponse, UsersReadUserMeResponse, UsersDeleteUserMeResponse, UsersUpdateUserMeData, UsersUpdateUserMeResponse, UsersUpdatePasswordMeData, UsersUpdatePasswordMeResponse, UsersRegisterUserData, UsersRegisterUserResponse, UsersReadUserByIdData, UsersReadUserByIdResponse, UsersUpdateUserData, UsersUpdateUserResponse, UsersDeleteUserData, UsersDeleteUserResponse, UtilsTestEmailData, UtilsTestEmailResponse, UtilsHealthCheckResponse } from './types.gen';
 
 export class AccountsService {
     /**
@@ -59,6 +59,100 @@ export class AccountsService {
             url: '/api/v1/accounts/{account_id}',
             path: {
                 account_id: data.accountId
+            },
+            body: data.requestBody,
+            mediaType: 'application/json',
+            errors: {
+                422: 'Validation Error'
+            }
+        });
+    }
+}
+
+export class AssetsService {
+    /**
+     * Read Assets
+     * @param data The data for the request.
+     * @param data.skip
+     * @param data.limit
+     * @param data.assetType
+     * @param data.isActive
+     * @param data.status
+     * @param data.query
+     * @returns AssetInstrumentsPublic Successful Response
+     * @throws ApiError
+     */
+    public static readAssets(data: AssetsReadAssetsData = {}): CancelablePromise<AssetsReadAssetsResponse> {
+        return __request(OpenAPI, {
+            method: 'GET',
+            url: '/api/v1/assets/',
+            query: {
+                skip: data.skip,
+                limit: data.limit,
+                asset_type: data.assetType,
+                is_active: data.isActive,
+                status: data.status,
+                query: data.query
+            },
+            errors: {
+                422: 'Validation Error'
+            }
+        });
+    }
+    
+    /**
+     * Create Asset
+     * @param data The data for the request.
+     * @param data.requestBody
+     * @returns AssetInstrumentPublic Successful Response
+     * @throws ApiError
+     */
+    public static createAsset(data: AssetsCreateAssetData): CancelablePromise<AssetsCreateAssetResponse> {
+        return __request(OpenAPI, {
+            method: 'POST',
+            url: '/api/v1/assets/',
+            body: data.requestBody,
+            mediaType: 'application/json',
+            errors: {
+                422: 'Validation Error'
+            }
+        });
+    }
+    
+    /**
+     * Read Asset
+     * @param data The data for the request.
+     * @param data.assetId
+     * @returns AssetInstrumentPublic Successful Response
+     * @throws ApiError
+     */
+    public static readAsset(data: AssetsReadAssetData): CancelablePromise<AssetsReadAssetResponse> {
+        return __request(OpenAPI, {
+            method: 'GET',
+            url: '/api/v1/assets/{asset_id}',
+            path: {
+                asset_id: data.assetId
+            },
+            errors: {
+                422: 'Validation Error'
+            }
+        });
+    }
+    
+    /**
+     * Update Asset
+     * @param data The data for the request.
+     * @param data.assetId
+     * @param data.requestBody
+     * @returns AssetInstrumentPublic Successful Response
+     * @throws ApiError
+     */
+    public static updateAsset(data: AssetsUpdateAssetData): CancelablePromise<AssetsUpdateAssetResponse> {
+        return __request(OpenAPI, {
+            method: 'PATCH',
+            url: '/api/v1/assets/{asset_id}',
+            path: {
+                asset_id: data.assetId
             },
             body: data.requestBody,
             mediaType: 'application/json',

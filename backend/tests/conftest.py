@@ -11,6 +11,7 @@ from app.core.config import settings
 from app.main import app
 from app.models import (
     Account,
+    AssetInstrument,
     AuditEvent,
     Item,
     NormalizationConflict,
@@ -43,6 +44,8 @@ def db(test_db_engine: None) -> Generator[Session, None, None]:
     with Session(db_module.engine) as session:
         db_module.init_db(session)
         yield session
+        statement = delete(AssetInstrument)
+        session.execute(statement)
         statement = delete(AuditEvent)
         session.execute(statement)
         statement = delete(NormalizationConflict)

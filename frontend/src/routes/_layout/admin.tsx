@@ -1,23 +1,15 @@
-import { useSuspenseQuery } from "@tanstack/react-query"
-import { createFileRoute, redirect } from "@tanstack/react-router"
-import { Suspense } from "react"
+import { createFileRoute, Link, Outlet, redirect, useRouterState } from "@tanstack/react-router"
 
-import { type UserPublic, UsersService } from "@/client"
-import AddUser from "@/components/Admin/AddUser"
-import { columns, type UserTableData } from "@/components/Admin/columns"
-import { DataTable } from "@/components/Common/DataTable"
-import PendingUsers from "@/components/Pending/PendingUsers"
-import useAuth from "@/hooks/useAuth"
+import { UsersService } from "@/client"
+import { Button } from "@/components/ui/button"
 
-function getUsersQueryOptions() {
-  return {
-    queryFn: () => UsersService.readUsers({ skip: 0, limit: 100 }),
-    queryKey: ["users"],
-  }
-}
+const adminNavItems = [
+  { path: "/admin", title: "Users" },
+  { path: "/admin/assets", title: "Assets" },
+] as const
 
 export const Route = createFileRoute("/_layout/admin")({
-  component: Admin,
+  component: AdminLayout,
   beforeLoad: async () => {
     const user = await UsersService.readUserMe()
     if (!user.is_superuser) {
@@ -35,39 +27,25 @@ export const Route = createFileRoute("/_layout/admin")({
   }),
 })
 
-function UsersTableContent() {
-  const { user: currentUser } = useAuth()
-  const { data: users } = useSuspenseQuery(getUsersQueryOptions())
+function AdminLayout() {
+  const router = useRouterState()
+  const currentPath = router.location.pathname
 
-  const tableData: UserTableData[] = users.data.map((user: UserPublic) => ({
-    ...user,
-    isCurrentUser: currentUser?.id === user.id,
-  }))
-
-  return <DataTable columns={columns} data={tableData} />
-}
-
-function UsersTable() {
-  return (
-    <Suspense fallback={<PendingUsers />}>
-      <UsersTableContent />
-    </Suspense>
-  )
-}
-
-function Admin() {
   return (
     <div className="flex flex-col gap-6">
-      <div className="flex items-center justify-between">
-        <div>
-          <h1 className="text-2xl font-bold tracking-tight">Users</h1>
-          <p className="text-muted-foreground">
-            Manage user accounts and permissions
-          </p>
-        </div>
-        <AddUser />
+      <div className="flex flex-wrap items-center gap-2">
+        {adminNavItems.map((item) => (
+          <Button
+            key={item.path}
+            variant={currentPath === item.path || (item.path === "/admin" && currentPath === "/admin/") ? "default" : "outline"}
+            size="sm"
+            asChild
+          >
+            <Link to={item.path}>{item.title}</Link>
+          </Button>
+        ))}
       </div>
-      <UsersTable />
+      <Outlet />
     </div>
   )
 }

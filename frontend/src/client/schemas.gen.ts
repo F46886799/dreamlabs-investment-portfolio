@@ -251,6 +251,516 @@ export const AccountsPublicSchema = {
     title: 'AccountsPublic'
 } as const;
 
+export const AssetInstrumentCreateSchema = {
+    properties: {
+        asset_type: {
+            type: 'string',
+            maxLength: 32,
+            title: 'Asset Type'
+        },
+        symbol: {
+            type: 'string',
+            maxLength: 32,
+            minLength: 1,
+            title: 'Symbol'
+        },
+        display_name: {
+            type: 'string',
+            maxLength: 255,
+            minLength: 1,
+            title: 'Display Name'
+        },
+        canonical_name: {
+            anyOf: [
+                {
+                    type: 'string',
+                    maxLength: 255
+                },
+                {
+                    type: 'null'
+                }
+            ],
+            title: 'Canonical Name'
+        },
+        market: {
+            anyOf: [
+                {
+                    type: 'string',
+                    maxLength: 64
+                },
+                {
+                    type: 'null'
+                }
+            ],
+            title: 'Market'
+        },
+        exchange: {
+            anyOf: [
+                {
+                    type: 'string',
+                    maxLength: 64
+                },
+                {
+                    type: 'null'
+                }
+            ],
+            title: 'Exchange'
+        },
+        currency: {
+            type: 'string',
+            maxLength: 8,
+            title: 'Currency',
+            default: 'USD'
+        },
+        country: {
+            anyOf: [
+                {
+                    type: 'string',
+                    maxLength: 64
+                },
+                {
+                    type: 'null'
+                }
+            ],
+            title: 'Country'
+        },
+        category_level_1: {
+            type: 'string',
+            maxLength: 64,
+            title: 'Category Level 1',
+            default: 'other'
+        },
+        category_level_2: {
+            anyOf: [
+                {
+                    type: 'string',
+                    maxLength: 64
+                },
+                {
+                    type: 'null'
+                }
+            ],
+            title: 'Category Level 2'
+        },
+        status: {
+            type: 'string',
+            maxLength: 32,
+            title: 'Status',
+            default: 'active'
+        },
+        sync_status: {
+            type: 'string',
+            maxLength: 32,
+            title: 'Sync Status',
+            default: 'manual'
+        },
+        external_source: {
+            anyOf: [
+                {
+                    type: 'string',
+                    maxLength: 64
+                },
+                {
+                    type: 'null'
+                }
+            ],
+            title: 'External Source'
+        },
+        external_id: {
+            anyOf: [
+                {
+                    type: 'string',
+                    maxLength: 128
+                },
+                {
+                    type: 'null'
+                }
+            ],
+            title: 'External Id'
+        },
+        is_active: {
+            type: 'boolean',
+            title: 'Is Active',
+            default: true
+        }
+    },
+    type: 'object',
+    required: ['asset_type', 'symbol', 'display_name'],
+    title: 'AssetInstrumentCreate'
+} as const;
+
+export const AssetInstrumentPublicSchema = {
+    properties: {
+        asset_type: {
+            type: 'string',
+            maxLength: 32,
+            title: 'Asset Type'
+        },
+        symbol: {
+            type: 'string',
+            maxLength: 32,
+            minLength: 1,
+            title: 'Symbol'
+        },
+        display_name: {
+            type: 'string',
+            maxLength: 255,
+            minLength: 1,
+            title: 'Display Name'
+        },
+        canonical_name: {
+            anyOf: [
+                {
+                    type: 'string',
+                    maxLength: 255
+                },
+                {
+                    type: 'null'
+                }
+            ],
+            title: 'Canonical Name'
+        },
+        market: {
+            anyOf: [
+                {
+                    type: 'string',
+                    maxLength: 64
+                },
+                {
+                    type: 'null'
+                }
+            ],
+            title: 'Market'
+        },
+        exchange: {
+            anyOf: [
+                {
+                    type: 'string',
+                    maxLength: 64
+                },
+                {
+                    type: 'null'
+                }
+            ],
+            title: 'Exchange'
+        },
+        currency: {
+            type: 'string',
+            maxLength: 8,
+            title: 'Currency',
+            default: 'USD'
+        },
+        country: {
+            anyOf: [
+                {
+                    type: 'string',
+                    maxLength: 64
+                },
+                {
+                    type: 'null'
+                }
+            ],
+            title: 'Country'
+        },
+        category_level_1: {
+            type: 'string',
+            maxLength: 64,
+            title: 'Category Level 1',
+            default: 'other'
+        },
+        category_level_2: {
+            anyOf: [
+                {
+                    type: 'string',
+                    maxLength: 64
+                },
+                {
+                    type: 'null'
+                }
+            ],
+            title: 'Category Level 2'
+        },
+        status: {
+            type: 'string',
+            maxLength: 32,
+            title: 'Status',
+            default: 'active'
+        },
+        sync_status: {
+            type: 'string',
+            maxLength: 32,
+            title: 'Sync Status',
+            default: 'manual'
+        },
+        external_source: {
+            anyOf: [
+                {
+                    type: 'string',
+                    maxLength: 64
+                },
+                {
+                    type: 'null'
+                }
+            ],
+            title: 'External Source'
+        },
+        external_id: {
+            anyOf: [
+                {
+                    type: 'string',
+                    maxLength: 128
+                },
+                {
+                    type: 'null'
+                }
+            ],
+            title: 'External Id'
+        },
+        is_active: {
+            type: 'boolean',
+            title: 'Is Active',
+            default: true
+        },
+        id: {
+            type: 'string',
+            format: 'uuid',
+            title: 'Id'
+        },
+        created_at: {
+            type: 'string',
+            format: 'date-time',
+            title: 'Created At'
+        },
+        updated_at: {
+            type: 'string',
+            format: 'date-time',
+            title: 'Updated At'
+        },
+        last_synced_at: {
+            anyOf: [
+                {
+                    type: 'string',
+                    format: 'date-time'
+                },
+                {
+                    type: 'null'
+                }
+            ],
+            title: 'Last Synced At'
+        }
+    },
+    type: 'object',
+    required: ['asset_type', 'symbol', 'display_name', 'id', 'created_at', 'updated_at'],
+    title: 'AssetInstrumentPublic'
+} as const;
+
+export const AssetInstrumentUpdateSchema = {
+    properties: {
+        asset_type: {
+            anyOf: [
+                {
+                    type: 'string',
+                    maxLength: 32
+                },
+                {
+                    type: 'null'
+                }
+            ],
+            title: 'Asset Type'
+        },
+        symbol: {
+            anyOf: [
+                {
+                    type: 'string',
+                    maxLength: 32,
+                    minLength: 1
+                },
+                {
+                    type: 'null'
+                }
+            ],
+            title: 'Symbol'
+        },
+        display_name: {
+            anyOf: [
+                {
+                    type: 'string',
+                    maxLength: 255,
+                    minLength: 1
+                },
+                {
+                    type: 'null'
+                }
+            ],
+            title: 'Display Name'
+        },
+        canonical_name: {
+            anyOf: [
+                {
+                    type: 'string',
+                    maxLength: 255
+                },
+                {
+                    type: 'null'
+                }
+            ],
+            title: 'Canonical Name'
+        },
+        market: {
+            anyOf: [
+                {
+                    type: 'string',
+                    maxLength: 64
+                },
+                {
+                    type: 'null'
+                }
+            ],
+            title: 'Market'
+        },
+        exchange: {
+            anyOf: [
+                {
+                    type: 'string',
+                    maxLength: 64
+                },
+                {
+                    type: 'null'
+                }
+            ],
+            title: 'Exchange'
+        },
+        currency: {
+            anyOf: [
+                {
+                    type: 'string',
+                    maxLength: 8
+                },
+                {
+                    type: 'null'
+                }
+            ],
+            title: 'Currency'
+        },
+        country: {
+            anyOf: [
+                {
+                    type: 'string',
+                    maxLength: 64
+                },
+                {
+                    type: 'null'
+                }
+            ],
+            title: 'Country'
+        },
+        category_level_1: {
+            anyOf: [
+                {
+                    type: 'string',
+                    maxLength: 64
+                },
+                {
+                    type: 'null'
+                }
+            ],
+            title: 'Category Level 1'
+        },
+        category_level_2: {
+            anyOf: [
+                {
+                    type: 'string',
+                    maxLength: 64
+                },
+                {
+                    type: 'null'
+                }
+            ],
+            title: 'Category Level 2'
+        },
+        status: {
+            anyOf: [
+                {
+                    type: 'string',
+                    maxLength: 32
+                },
+                {
+                    type: 'null'
+                }
+            ],
+            title: 'Status'
+        },
+        sync_status: {
+            anyOf: [
+                {
+                    type: 'string',
+                    maxLength: 32
+                },
+                {
+                    type: 'null'
+                }
+            ],
+            title: 'Sync Status'
+        },
+        external_source: {
+            anyOf: [
+                {
+                    type: 'string',
+                    maxLength: 64
+                },
+                {
+                    type: 'null'
+                }
+            ],
+            title: 'External Source'
+        },
+        external_id: {
+            anyOf: [
+                {
+                    type: 'string',
+                    maxLength: 128
+                },
+                {
+                    type: 'null'
+                }
+            ],
+            title: 'External Id'
+        },
+        is_active: {
+            anyOf: [
+                {
+                    type: 'boolean'
+                },
+                {
+                    type: 'null'
+                }
+            ],
+            title: 'Is Active'
+        }
+    },
+    type: 'object',
+    title: 'AssetInstrumentUpdate'
+} as const;
+
+export const AssetInstrumentsPublicSchema = {
+    properties: {
+        data: {
+            items: {
+                '$ref': '#/components/schemas/AssetInstrumentPublic'
+            },
+            type: 'array',
+            title: 'Data'
+        },
+        count: {
+            type: 'integer',
+            title: 'Count'
+        }
+    },
+    type: 'object',
+    required: ['data', 'count'],
+    title: 'AssetInstrumentsPublic'
+} as const;
+
 export const AuditEventPublicSchema = {
     properties: {
         id: {
